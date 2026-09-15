@@ -1,44 +1,27 @@
 const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.main-nav');if(toggle&&nav){toggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});document.addEventListener('keydown',e=>{if(e.key==='Escape'){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false')}});}
 
-// Préparation de l'accueil dynamique : une section facultative disparaît entièrement
-// lorsqu'aucun événement / aucune sortie ne lui est fourni par la future source de données.
 document.querySelectorAll('[data-optional-section]').forEach(section=>{const container=section.querySelector('.optional-items');if(!container)return;const items=[...container.children].filter(item=>!item.hidden&&item.getAttribute('aria-hidden')!=='true');if(items.length===0)section.hidden=true;});
 
-// Correctif mobile final : empêche tout élément de forcer une largeur supérieure à l'écran
-// tout en conservant les carrousels horizontaux prévus par la maquette.
-const mobileDetails=document.createElement('style');mobileDetails.textContent=`@media(max-width:900px){
-html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
-body>*{max-width:100vw!important}
-main,header,footer,section,.content,.news,.events,.upcoming,.flower-stage{max-width:100%!important;min-width:0!important}
-.site-header{width:100%!important;max-width:100%!important}
-.brand{min-width:0!important;max-width:calc(100% - 150px)!important}.brand-name{min-width:0!important}
-.hero{width:100%!important;max-width:100vw!important}
-.content{width:100%!important;max-width:100%!important}
-.news{width:100%!important;min-width:0!important;max-width:100%!important}
-.news-grid{width:auto!important;max-width:none!important;min-width:0!important}
-.news-grid article{box-sizing:border-box!important;max-width:82vw!important;min-width:0!important}
-.news-grid .card,.news-grid .pic{min-width:0!important;max-width:100%!important}
-.news-grid .card time{display:flex!important;align-items:center!important;gap:5px!important;color:#737a74!important;white-space:nowrap!important;font-size:8px!important}.news-grid .card time:before{content:'▣';font-size:10px;color:#285f3b;line-height:1}
-.events{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}
-.events-head{min-width:0!important}.events-head h2{min-width:0!important}
-.event{width:100%!important;max-width:100%!important;min-width:0!important;grid-template-columns:58px minmax(0,1fr) 15px!important;overflow:hidden!important}
-.event>strong{font-size:17px!important;min-width:0!important}.event span{min-width:0!important;overflow:hidden!important}.event span b,.event span small{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-.upcoming{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}
-.outing-grid{width:auto!important;max-width:none!important;min-width:0!important}
-.outing-grid article{box-sizing:border-box!important;max-width:66vw!important;min-width:0!important;overflow:hidden!important}
-.outing-grid article>div:last-child{display:flex!important;flex-direction:column!important;justify-content:center!important;min-width:0!important;max-width:100%!important}
-.outing-grid h3{margin-bottom:4px!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-.outing-photo{max-width:100%!important;min-width:0!important}
-.mobile-location{display:flex!important;align-items:center!important;gap:4px!important;font-size:8px!important;line-height:1.15!important;color:#6d746e!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}.mobile-location .pin-icon{width:10px!important;height:12px!important;min-width:10px!important;display:block!important;overflow:visible!important}.mobile-location .pin-icon path{fill:#285f3b!important}
-footer{width:100%!important;max-width:100%!important;overflow:hidden!important}
+const mobileDetails=document.createElement('style');mobileDetails.textContent=`
+.mobile-location,.mobile-calendar-icon{display:none}
+@media(max-width:900px){
+html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}body>*{max-width:100vw!important}main,header,footer,section,.content,.news,.events,.upcoming,.flower-stage{max-width:100%!important;min-width:0!important}.site-header{width:100%!important;max-width:100%!important}.brand{min-width:0!important;max-width:calc(100% - 150px)!important}.brand-name{min-width:0!important}.hero{width:100%!important;max-width:100vw!important}.content{width:100%!important;max-width:100%!important}.news{width:100%!important;min-width:0!important;max-width:100%!important}.news-grid{width:auto!important;max-width:none!important;min-width:0!important}.news-grid article{box-sizing:border-box!important;max-width:82vw!important;min-width:0!important}.news-grid .card,.news-grid .pic{min-width:0!important;max-width:100%!important}
+.news-grid .card time{display:flex!important;align-items:center!important;gap:6px!important;color:#737a74!important;white-space:nowrap!important;font-size:8px!important}.mobile-calendar-icon{display:block!important;width:14px;height:14px;min-width:14px;overflow:visible}.mobile-calendar-icon *{stroke:#285f3b;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.events{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}.events-head{min-width:0!important}.events-head h2{min-width:0!important}.event{width:100%!important;max-width:100%!important;min-width:0!important;grid-template-columns:58px minmax(0,1fr) 15px!important;overflow:hidden!important}.event>strong{font-size:17px!important;min-width:0!important}.event span{min-width:0!important;overflow:hidden!important}.event span b,.event span small{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.upcoming{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}.outing-grid{width:auto!important;max-width:none!important;min-width:0!important}.outing-grid article{box-sizing:border-box!important;max-width:66vw!important;min-width:0!important;overflow:hidden!important}.outing-grid article>div:last-child{display:flex!important;flex-direction:column!important;justify-content:center!important;min-width:0!important;max-width:100%!important}.outing-grid h3{margin-bottom:4px!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.outing-photo{max-width:100%!important;min-width:0!important}.mobile-location{display:flex!important;align-items:center!important;gap:4px!important;font-size:8px!important;line-height:1.15!important;color:#6d746e!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}.mobile-location .pin-icon{width:10px!important;height:12px!important;min-width:10px!important;display:block!important;overflow:visible!important}.mobile-location .pin-icon path{fill:#285f3b!important}footer{width:100%!important;max-width:100%!important;overflow:hidden!important}
 }
 @media(max-width:420px){.news-grid article{max-width:82vw!important}.outing-grid article{max-width:66vw!important}}
 `;document.head.appendChild(mobileDetails);
 
-const mobileLocations={
-  '.events-feature .outing-grid article:nth-child(1)':'Châteaulin (29)',
-  '.events-feature .outing-grid article:nth-child(2)':'Châteaulin (29)',
-  '.outings .outing-grid article:nth-child(1)':'Île de Groix (56)',
-  '.outings .outing-grid article:nth-child(2)':'Finistère (29)'
-};
-Object.entries(mobileLocations).forEach(([selector,place])=>{const article=document.querySelector(selector);if(!article)return;const box=article.querySelector('div:last-child');if(!box||box.querySelector('.mobile-location'))return;const location=document.createElement('small');location.className='mobile-location';location.innerHTML='<svg class="pin-icon" viewBox="0 0 24 28" aria-hidden="true"><path d="M12 0C5.9 0 1 4.9 1 11c0 8.1 11 17 11 17s11-8.9 11-17C23 4.9 18.1 0 12 0zm0 15.2A4.2 4.2 0 1 1 12 6.8a4.2 4.2 0 0 1 0 8.4z"/></svg><span></span>';location.querySelector('span').textContent=place;const title=box.querySelector('h3');if(title)title.insertAdjacentElement('afterend',location);});
+// Les pictogrammes ci-dessous sont créés uniquement pour la présentation mobile.
+if(window.matchMedia('(max-width: 900px)').matches){
+  document.querySelectorAll('.news-grid .card time').forEach(time=>{
+    if(time.querySelector('.mobile-calendar-icon'))return;
+    const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    icon.setAttribute('class','mobile-calendar-icon');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');
+    icon.innerHTML='<rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M7 3v4M17 3v4M3 9h18"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2M15 17h2"/>';
+    time.prepend(icon);
+  });
+
+  const mobileLocations={'.events-feature .outing-grid article:nth-child(1)':'Châteaulin (29)','.events-feature .outing-grid article:nth-child(2)':'Châteaulin (29)','.outings .outing-grid article:nth-child(1)':'Île de Groix (56)','.outings .outing-grid article:nth-child(2)':'Finistère (29)'};
+  Object.entries(mobileLocations).forEach(([selector,place])=>{const article=document.querySelector(selector);if(!article)return;const box=article.querySelector('div:last-child');if(!box||box.querySelector('.mobile-location'))return;const location=document.createElement('small');location.className='mobile-location';location.innerHTML='<svg class="pin-icon" viewBox="0 0 24 28" aria-hidden="true"><path d="M12 0C5.9 0 1 4.9 1 11c0 8.1 11 17 11 17s11-8.9 11-17C23 4.9 18.1 0 12 0zm0 15.2A4.2 4.2 0 1 1 12 6.8a4.2 4.2 0 0 1 0 8.4z"/></svg><span></span>';location.querySelector('span').textContent=place;const title=box.querySelector('h3');if(title)title.insertAdjacentElement('afterend',location);});
+}
