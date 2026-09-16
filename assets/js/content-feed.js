@@ -1,0 +1,18 @@
+/* Dynamic publication feeds. One article can appear in news + upcoming events without duplication. */
+(function(global){
+'use strict';
+const C=global.HorticultureContent;
+if(!C)return;
+const now=()=>new Date();
+const parseDate=v=>{if(!v)return null;const d=new Date(/T/.test(v)?v:v+'T23:59:59');return Number.isNaN(+d)?null:d};
+const eventEnd=a=>parseDate(a.event?.endDate||a.event?.startDate||a.eventDate||a.date);
+const isUpcoming=a=>{if(a.status==='draft'||a.status==='deleted')return false;const type=String(a.type||a.kind||'').toLowerCase();const flagged=a.placements?.upcomingEvents===true||a.event?.isFuture===true||type==='event';const end=eventEnd(a);return !!(flagged&&end&&end>=now())};
+const href=(a,prefix='')=>prefix+'actualites/article/?id='+encodeURIComponent(a.id);
+const photo=a=>C.mediaURL(a.cover||a.coverPhoto||a.thumbnail||a.photos?.[0]);
+const card=(a,prefix='')=>{const el=document.createElement('article');el.className='actualite-card';el.dataset.category=a.categoryKey||a.type||'association';const bg=photo(a);el.innerHTML=`<div class="actualite-photo"></div><div class="actualite-body"><span class="actualite-tag"></span><h2></h2><p></p><a>Lire la suite <b>→</b></a></div>`;if(bg)el.querySelector('.actualite-photo').style.backgroundImage=`url("${bg.replace(/"/g,'%22')}")`;el.querySelector('.actualite-tag').textContent=a.category||a.label||'Actualité';el.querySelector('h2').textContent=a.title||'Actualité';el.querySelector('p').textContent=a.summary||a.excerpt||'';el.querySelector('a').href=href(a,prefix);return el};
+async function all(){return (await C.index()).articles||[]}
+async function renderNewsGrid(root){const articles=await all();root.innerHTML='';articles.filter(a=>a.placements?.news!==false).forEach(a=>root.appendChild(card(a,'../')));global.makeCardsClickable?.(root)}
+async function renderUpcoming(root,limit){const articles=(await all()).filter(isUpcoming).sort((a,b)=>String(a.event?.startDate||a.eventDate||'').localeCompare(String(b.event?.startDate||b.eventDate||'')));root.innerHTML='';articles.slice(0,limit||articles.length).forEach(a=>root.appendChild(card(a,location.pathname.includes('/a-venir/')?'../':'./')));return articles}
+async function latest(n=3){return (await all()).filter(a=>a.placements?.homeLatest!==false).slice(0,n)}
+global.HorticultureFeed={all,isUpcoming,card,renderNewsGrid,renderUpcoming,latest,href};
+})(window);
