@@ -15,9 +15,16 @@ async function getJSON(url,options){
   if(!r.ok)throw new Error('Contenu indisponible ('+r.status+')');
   const d=await r.json();memory.set(url,d);return d;
 }
-/* Publication numbers are permanent and monotonic: the highest A-number is the newest publication.
- * This avoids an import timestamp moving an older prepared article behind another article. */
-function sortArticles(items){return(items||[]).filter(a=>a.status!=='deleted'&&a.status!=='draft').slice().sort((a,b)=>(Number(b.number)||0)-(Number(a.number)||0)||String(b.publishedAt||b.date||'').localeCompare(String(a.publishedAt||a.date||'')))}
+/* STRICT RULE: publication order depends ONLY on the permanent article number.
+ * A0000004 comes before A0000003, which comes before A0000002, etc.
+ * Dates and publication timestamps never influence ordering. */
+function articleNumber(a){
+  const explicit=Number(a&&a.number);
+  if(Number.isFinite(explicit)&&explicit>0)return explicit;
+  const m=String(a&&a.id||'').toUpperCase().match(/^A0*(\d+)$/);
+  return m?Number(m[1]):0;
+}
+function sortArticles(items){return(items||[]).filter(a=>a.status!=='deleted'&&a.status!=='draft').slice().sort((a,b)=>articleNumber(b)-articleNumber(a))}
 async function index(options){const d=await getJSON(INDEX_URL,{fresh:options?.fresh!==false});return{...d,articles:sortArticles(d.articles).map(a=>({...a,cover:resolveMedia(a.id,a.cover)}))}}
 function validId(id){return /^A\d{7,}$/i.test(String(id||'').trim())}
 function resolveMedia(id,m){if(!m)return m;const clean=String(id||'').toUpperCase(),base=RAW_ROOT+'actualites/'+clean+'/';if(typeof m==='string')return /^(https?:|data:|blob:|\/)/i.test(m)?m:base+m.replace(/^\.\//,'');const src=m.url||m.downloadUrl||m.src||'';const resolved=/^(https?:|data:|blob:|\/)/i.test(src)?src:base+src.replace(/^\.\//,'');return{...m,src:resolved,url:m.url?resolved:m.url,downloadUrl:m.downloadUrl?resolved:m.downloadUrl}}
