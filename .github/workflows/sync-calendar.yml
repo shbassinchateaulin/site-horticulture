@@ -1,0 +1,43 @@
+name: Sync Calendar
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build calendar data
+        run: |
+          python3 - <<'PY'
+          import urllib.request,re,json,datetime,os
+          u='https://calendar.google.com/calendar/ical/shbassinchateaulin%40gmail.com/public/basic.ics'
+          s=urllib.request.urlopen(u).read().decode('utf-8')
+          s=re.sub(r'\r?\n[ \t]','',s)
+          out=[]
+          def get(b,n):
+            m=re.search(r'^'+n+r'(?:;[^:]*)?:(.*)$',b,re.M|re.I)
+            return m.group(1).strip() if m else ''
+          def txt(v):
+            return v.replace('\\n',' · ').replace('\\,',',').replace('\\;',';').replace('\\\\','\\')
+          for b in s.split('BEGIN:VEVENT')[1:]:
+            st=get(b,'DTSTART')
+            m=re.match(r'(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?',st)
+            if not m: continue
+            d=f'{m[1]}-{m[2]}-{m[3]}'
+            t=f'{m[4]}:{m[5]}' if m[4] else ''
+            out.append({'date':d,'time':t,'title':txt(get(b,'SUMMARY')) or 'Événement','location':txt(get(b,'LOCATION')),'description':txt(get(b,'DESCRIPTION')),'past':d<datetime.date.today().isoformat(),'source':'google'})
+          os.makedirs('assets/data',exist_ok=True)
+          with open('assets/data/calendar.json','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2)
+          PY
+      - name: Publish changes
+        run: |
+          git config user.name calendar-sync
+          git config user.email actions@github.com
+          git add assets/data/calendar.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Sync Google Calendar"
+          git push
