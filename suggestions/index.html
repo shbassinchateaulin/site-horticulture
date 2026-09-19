@@ -24,6 +24,24 @@
 .suggestions-alternative a:hover{color:#377847}
 @media(max-width:900px){.suggestions-hero{min-height:255px}.suggestions-hero h1{font-size:43px}.suggestions-wrap{padding:46px 22px 58px}.suggestions-frame{height:1050px}}
 @media(max-width:620px){.suggestions-hero-inner{padding:36px 22px}.suggestions-hero h1{font-size:38px}.suggestions-hero p{font-size:14px}.suggestions-wrap{padding:38px 0 48px}.suggestions-intro{padding:0 20px}.suggestions-intro h2{font-size:28px}.suggestions-frame{height:1080px}.suggestions-alternative{padding:0 20px}}
+
+.suggestions-wrap [hidden]{display:none!important}
+.suggestion-form{max-width:760px;margin:0 auto;border-top:1px solid #dbe3d8;padding-top:27px}
+.suggestion-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 23px}
+.suggestion-field{margin:0 0 20px}
+.suggestion-field.wide{grid-column:1/-1}
+.suggestion-field label{display:block;color:#183c29;font-size:13px;font-weight:600;margin-bottom:8px}
+.suggestion-field input,.suggestion-field select,.suggestion-field textarea{display:block;width:100%;padding:13px 14px;background:#fff;color:#193a29;border:1px solid #ccd7cd;border-radius:4px;font:16px/1.45 var(--sans);outline:none}
+.suggestion-field :is(input,select,textarea):focus-visible{border-color:#316744;box-shadow:0 0 0 3px rgba(49,103,68,.14)}
+.suggestion-field textarea{min-height:142px;resize:vertical}
+.suggestion-field .help{font-size:12px;line-height:1.6;color:#637067;margin:8px 0 0}
+.suggestion-submit{border:0;background:#174b30;color:white;padding:14px 27px;font:600 13px var(--sans);cursor:pointer;border-radius:3px}
+.suggestion-submit:hover{background:#286641}
+.suggestion-submit:disabled{opacity:.6;cursor:wait}
+.suggestion-status{margin:17px 0 0;padding:12px 15px;border-left:3px solid #a84b3d;background:#fbf1ef;color:#76382f;line-height:1.5}
+.suggestion-status.success{border-color:#397d4c;background:#edf4ec;color:#16432a}
+.suggestion-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+@media(max-width:620px){.suggestion-form{margin:0 20px}.suggestion-fields{display:block}}
 </style>
 </head>
 <body>
@@ -37,11 +55,81 @@
 <p>Une sortie, un atelier, une conférence ou une amélioration pour l’association : racontez-nous ce que vous aimeriez voir. Toutes les propositions sont les bienvenues.</p>
 <span class="suggestions-rule" aria-hidden="true"></span>
 </div>
+
+<form id="suggestion-form" class="suggestion-form" action="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" method="post" target="suggestion-reponse" hidden>
+<div class="suggestion-fields">
+<div class="suggestion-field wide"><label for="nature">Nature de votre suggestion *</label><select id="nature" name="nature" required><option value="">Faites un choix</option><option>Animations / activités</option><option>Sorties / jardins à visiter</option><option>Interventions / conférences</option><option>Thèmes à étudier</option><option>Services proposés</option><option>Achats de fournitures, matériel ou végétaux</option><option>Vie de l'association</option><option>Autre</option></select></div>
+<div class="suggestion-field wide"><label for="titre">Titre de votre suggestion *</label><input id="titre" name="titre" type="text" maxlength="180" placeholder="Ex. Visite d’un jardin remarquable" required></div>
+<div class="suggestion-field wide"><label for="suggestion">Votre suggestion *</label><textarea id="suggestion" name="suggestion" placeholder="Décrivez votre idée le plus simplement possible…" required></textarea></div>
+<div class="suggestion-field"><label for="lieu">Lieu / organisme</label><input id="lieu" name="lieu" type="text" placeholder="Facultatif"></div>
+<div class="suggestion-field"><label for="nom">Nom et prénom</label><input id="nom" name="nom" type="text" placeholder="Facultatif"></div>
+<div class="suggestion-field wide"><label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" placeholder="Votre adresse e-mail"><p class="help">Facultative, votre adresse nous permet de vous recontacter au sujet de votre proposition.</p></div>
+</div>
+<div class="suggestion-trap" aria-hidden="true"><label for="website">Site web</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+<input name="requestId" id="suggestion-request-id" type="hidden">
+<button class="suggestion-submit" type="submit">Envoyer ma suggestion</button>
+<p id="suggestion-status" class="suggestion-status" role="status" aria-live="polite" hidden></p>
+</form>
+<iframe name="suggestion-reponse" id="suggestion-reponse" title="Réponse à votre suggestion" hidden></iframe>
 <iframe class="suggestions-frame" title="Formulaire de suggestions de l’association" src="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" loading="lazy"></iframe>
 <p class="suggestions-alternative">Le formulaire ne s’affiche pas ? <a href="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" target="_blank" rel="noopener noreferrer">Ouvrir le formulaire dans un nouvel onglet ↗</a></p>
 </section>
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../assets/js/site.js?v=20260919-admin-sequence-1"></script>
+
+<script>
+/*
+ * À activer seulement après installation du doPost dans le projet Apps Script
+ * et redéploiement de l'application Web à la même URL /exec.
+ */
+const suggestionsNativeEnabled = false;
+if (suggestionsNativeEnabled) {
+  const form = document.getElementById('suggestion-form');
+  const frame = document.querySelector('.suggestions-frame');
+  const alternative = document.querySelector('.suggestions-alternative');
+  const status = document.getElementById('suggestion-status');
+  const button = form.querySelector('button[type="submit"]');
+  let pendingId = '';
+  let timeoutId;
+  form.hidden = false;
+  frame.hidden = true;
+  alternative.hidden = true;
+
+  form.addEventListener('submit', function (event) {
+    if (pendingId) { event.preventDefault(); return; }
+    pendingId = crypto.randomUUID();
+    document.getElementById('suggestion-request-id').value = pendingId;
+    button.disabled = true;
+    button.textContent = 'Envoi en cours…';
+    status.hidden = true;
+    timeoutId = setTimeout(function () {
+      pendingId = '';
+      button.disabled = false;
+      button.textContent = 'Envoyer ma suggestion';
+      status.className = 'suggestion-status';
+      status.textContent = 'La confirmation tarde à arriver. Vérifiez auprès de l’association avant de renvoyer votre suggestion.';
+      status.hidden = false;
+    }, 30000);
+  });
+
+  window.addEventListener('message', function (event) {
+    const response = event.data;
+    if (event.source !== document.getElementById('suggestion-reponse').contentWindow ||
+        !response || response.type !== 'shbc-suggestion-response' ||
+        !pendingId || response.requestId !== pendingId) return;
+    clearTimeout(timeoutId);
+    pendingId = '';
+    button.disabled = false;
+    button.textContent = 'Envoyer ma suggestion';
+    status.className = response.ok ? 'suggestion-status success' : 'suggestion-status';
+    status.textContent = response.ok
+      ? 'Merci pour votre suggestion ! Elle a bien été transmise à notre équipe et sera étudiée avec attention.'
+      : (response.message || 'Une erreur est survenue lors de l’envoi.');
+    status.hidden = false;
+    if (response.ok) form.reset();
+  });
+}
+</script>
 </body>
 </html>
