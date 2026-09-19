@@ -7,59 +7,65 @@
 <meta name="description" content="Proposez une sortie, une activité ou une idée pour la Société d’Horticulture et d’Art Floral du Bassin de Châteaulin.">
 <link rel="stylesheet" href="../assets/css/site.css">
 <style>
-.suggestions-hero{min-height:290px;display:flex;align-items:center;color:#fff;background:linear-gradient(90deg,rgba(4,38,24,.86),rgba(4,38,24,.38) 60%,rgba(4,38,24,.11)),url('../assets/images/chateaulin-hero.png') center 48%/cover no-repeat}
-.suggestions-hero-inner{width:min(1180px,100%);margin:auto;padding:46px 32px}
-.suggestions-hero h1{font:400 54px/1.1 var(--serif);margin:0}
-.suggestions-hero h1:after{content:"";display:block;width:38px;border-top:2px solid #a7ca93;margin:18px 0}
-.suggestions-hero p{max-width:570px;margin:0;font:400 17px/1.55 var(--serif)}
-.suggestions-wrap{width:min(1010px,100%);margin:auto;padding:56px 32px 65px}
-.suggestions-kicker{font:600 10px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#315f36;margin:0 0 14px}
-.suggestions-intro{max-width:750px;margin:0 auto 20px;text-align:center}
-.suggestions-intro h2{font:400 34px/1.22 var(--serif);color:#123626;margin:0 0 18px}
-.suggestions-intro p:last-child{font-size:14px;line-height:1.72;color:#526058;margin:0}
-.suggestions-rule{display:block;width:38px;border-top:2px solid #65936b;margin:28px auto 22px}
-.suggestions-frame{display:block;width:100%;height:990px;border:0;background:#fff}
-.suggestions-alternative{margin:3px 0 0;text-align:center;font-size:11px;color:#667369;line-height:1.6}
-.suggestions-alternative a{color:#215a37;font-weight:600;border-bottom:1px solid #7fac80;padding-bottom:2px}
-.suggestions-alternative a:hover{color:#377847}
-@media(max-width:900px){.suggestions-hero{min-height:255px}.suggestions-hero h1{font-size:43px}.suggestions-wrap{padding:46px 22px 58px}.suggestions-frame{height:1050px}}
-@media(max-width:620px){.suggestions-hero-inner{padding:36px 22px}.suggestions-hero h1{font-size:38px}.suggestions-hero p{font-size:14px}.suggestions-wrap{padding:38px 0 48px}.suggestions-intro{padding:0 20px}.suggestions-intro h2{font-size:28px}.suggestions-frame{height:1080px}.suggestions-alternative{padding:0 20px}}
 
-.suggestions-wrap [hidden]{display:none!important}
-.suggestion-form{max-width:760px;margin:0 auto;border-top:1px solid #dbe3d8;padding-top:27px}
-.suggestion-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 23px}
-.suggestion-field{margin:0 0 20px}
+:root{--suggestion-ink:#173827;--suggestion-cream:#faf9f4}
+.suggestions-page{background:var(--suggestion-cream)}
+.suggestions-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);min-height:470px;background:#f8f8f2}
+.suggestions-hero-copy{align-self:center;padding:58px clamp(26px,5.2vw,90px) 64px max(32px,calc((100vw - 1380px)/2));position:relative;z-index:1}
+.suggestions-kicker{color:#376947;text-transform:uppercase;letter-spacing:.21em;font:600 11px/1.6 var(--sans);margin:0 0 20px}
+.suggestions-hero h1{font:400 clamp(42px,4.9vw,76px)/1.03 var(--serif);letter-spacing:-.035em;color:#152e25;margin:0 0 22px;max-width:720px}
+.suggestions-hero-copy>p:last-child{font:400 clamp(16px,1.35vw,19px)/1.6 var(--serif);color:#314238;margin:0;max-width:610px}
+.suggestions-hero-art{min-height:470px;background:url('../assets/images/suggestions-carnet.webp') 55% center/cover no-repeat}
+.suggestions-wrap{max-width:1380px;margin:0 auto;padding:60px 40px 95px}
+.suggestions-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,290px);gap:58px}
+.suggestions-intro{margin:0 0 26px}
+.suggestions-intro h2{font:400 clamp(29px,3vw,39px)/1.2 var(--serif);color:var(--suggestion-ink);margin:0 0 11px}
+.suggestions-intro p{font:400 15px/1.7 var(--sans);color:#5b6a5e;max-width:730px;margin:0}
+.suggestion-form{margin:0;padding:0}
+.suggestion-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+.suggestion-field{margin:0 0 21px}
 .suggestion-field.wide{grid-column:1/-1}
-.suggestion-field label{display:block;color:#183c29;font-size:13px;font-weight:600;margin-bottom:8px}
-.suggestion-field input,.suggestion-field select,.suggestion-field textarea{display:block;width:100%;padding:13px 14px;background:#fff;color:#193a29;border:1px solid #ccd7cd;border-radius:4px;font:16px/1.45 var(--sans);outline:none}
+.suggestion-field label{display:block;color:#244334;font:600 13px/1.5 var(--sans);margin:0 0 8px}
+.suggestion-field input,.suggestion-field select,.suggestion-field textarea{display:block;width:100%;min-width:0;padding:13px 15px;background:#fff;color:#193a29;border:1px solid #b7caba;border-radius:4px;font:16px/1.45 var(--sans);outline:none}
 .suggestion-field :is(input,select,textarea):focus-visible{border-color:#316744;box-shadow:0 0 0 3px rgba(49,103,68,.14)}
-.suggestion-field textarea{min-height:142px;resize:vertical}
-.suggestion-field .help{font-size:12px;line-height:1.6;color:#637067;margin:8px 0 0}
-.suggestion-submit{border:0;background:#174b30;color:white;padding:14px 27px;font:600 13px var(--sans);cursor:pointer;border-radius:3px}
+.suggestion-field textarea{min-height:145px;resize:vertical}
+.suggestion-field .help{font:400 12px/1.6 var(--sans);color:#637067;margin:8px 0 0}
+.suggestion-submit{border:0;background:#174b30;color:white;padding:15px 29px;font:600 14px var(--sans);cursor:pointer;border-radius:4px}
 .suggestion-submit:hover{background:#286641}
 .suggestion-submit:disabled{opacity:.6;cursor:wait}
 .suggestion-status{margin:17px 0 0;padding:12px 15px;border-left:3px solid #a84b3d;background:#fbf1ef;color:#76382f;line-height:1.5}
 .suggestion-status.success{border-color:#397d4c;background:#edf4ec;color:#16432a}
 .suggestion-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
-@media(max-width:620px){.suggestion-form{margin:0 20px}.suggestion-fields{display:block}}
+.suggestions-aside{border-left:1px solid #d2ded1;padding:34px 0 20px 40px;align-self:stretch;color:#2c5b3b}
+.suggestions-aside .botanical{font:400 74px/1 var(--serif);color:#7a9c73;margin:20px 0 30px;transform:rotate(-15deg);display:inline-block}
+.suggestions-aside blockquote{font:italic 400 30px/1.24 var(--serif);margin:0 0 25px;color:#254a32}
+.suggestions-aside p{font:400 15px/1.7 var(--serif);margin:0;color:#556754}
+.suggestions-landscape{height:clamp(110px,14vw,195px);background:url('../assets/images/suggestions-paysage.webp') center 54%/cover no-repeat,linear-gradient(to bottom,var(--suggestion-cream),#0b422c)}
+.suggestions-wrap [hidden]{display:none!important}
+@media(max-width:900px){.suggestions-hero{min-height:360px}.suggestions-hero-art{min-height:360px}.suggestions-hero-copy{padding:42px 25px 42px 32px}.suggestions-wrap{padding:48px 26px 68px}.suggestions-layout{grid-template-columns:minmax(0,1fr) 205px;gap:25px}.suggestions-aside{padding-left:24px}.suggestions-aside blockquote{font-size:25px}}
+@media(max-width:680px){.suggestions-hero{grid-template-columns:1fr}.suggestions-hero-copy{padding:38px 22px 32px}.suggestions-hero h1{font-size:clamp(39px,10vw,54px)}.suggestions-hero-art{min-height:230px;aspect-ratio:1.9/1;background-position:65% 48%}.suggestions-wrap{padding:38px 21px 50px}.suggestions-layout{display:block}.suggestions-aside{border-left:0;border-top:1px solid #d2ded1;margin-top:45px;padding:23px 0 0;display:grid;grid-template-columns:55px 1fr;column-gap:15px}.suggestions-aside .botanical{grid-row:span 2;font-size:49px;margin:3px 0}.suggestions-aside blockquote{font-size:24px;margin:0 0 9px}.suggestions-aside p{font-size:14px}.suggestions-landscape{height:120px}}
+@media(max-width:480px){.suggestion-fields{display:block}.suggestions-hero-art{min-height:200px}.suggestions-landscape{height:95px}}
 </style>
 </head>
 <body>
 <header class="site-header"><a class="brand" href="../"><img class="brand-logo" src="../assets/images/logo.png" alt="Logo de la Société d’Horticulture"><div class="brand-name">Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</div></a><nav class="main-nav"><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a><a href="../contact/">Contact</a><a class="active" aria-current="page" href="./">Suggestions</a></nav><div class="header-right"><span class="search-icon"></span><a class="join" href="../adhesion/">Adhérer <b>→</b></a></div><button class="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button></header>
-<main>
-<section class="suggestions-hero"><div class="suggestions-hero-inner"><h1>Suggestions</h1><p>Partageons vos idées pour faire vivre l’association.</p></div></section>
-<section class="suggestions-wrap" aria-labelledby="suggestions-title">
-<div class="suggestions-intro">
-<p class="suggestions-kicker">La parole aux membres et aux visiteurs</p>
-<h2 id="suggestions-title">Une idée à partager ?</h2>
-<p>Une sortie, un atelier, une conférence ou une amélioration pour l’association : racontez-nous ce que vous aimeriez voir. Toutes les propositions sont les bienvenues.</p>
-<span class="suggestions-rule" aria-hidden="true"></span>
+<main class="suggestions-page">
+<section class="suggestions-hero" aria-labelledby="suggestions-title">
+<div class="suggestions-hero-copy">
+<p class="suggestions-kicker">Écouter · Partager · Faire grandir</p>
+<h1 id="suggestions-title">Vos idées font fleurir l’association</h1>
+<p>Une suggestion, une envie, une idée de sortie, un atelier, un lieu à découvrir ? Partagez-nous vos idées ! Elles nous aident à faire vivre une association toujours plus proche de la nature et des habitants du bassin de Châteaulin.</p>
 </div>
-
+<div class="suggestions-hero-art" role="img" aria-label="Carnet de jardin, fleurs et rouge-gorge près du paysage de Châteaulin"></div>
+</section>
+<section class="suggestions-wrap" aria-labelledby="suggestions-form-title">
+<div class="suggestions-layout">
+<div>
+<div class="suggestions-intro"><h2 id="suggestions-form-title">Partagez votre suggestion</h2><p>Chaque proposition est l’occasion d’imaginer ensemble de nouvelles activités.</p></div>
 <form id="suggestion-form" class="suggestion-form" action="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" method="post" target="suggestion-reponse">
 <div class="suggestion-fields">
-<div class="suggestion-field wide"><label for="nature">Nature de votre suggestion *</label><select id="nature" name="nature" required><option value="">Faites un choix</option><option>Animations / activités</option><option>Sorties / jardins à visiter</option><option>Interventions / conférences</option><option>Thèmes à étudier</option><option>Services proposés</option><option>Achats de fournitures, matériel ou végétaux</option><option>Vie de l'association</option><option>Autre</option></select></div>
-<div class="suggestion-field wide"><label for="titre">Titre de votre suggestion *</label><input id="titre" name="titre" type="text" maxlength="180" placeholder="Ex. Visite d’un jardin remarquable" required></div>
+<div class="suggestion-field"><label for="nature">Nature de votre suggestion *</label><select id="nature" name="nature" required><option value="">Faites un choix</option><option>Animations / activités</option><option>Sorties / jardins à visiter</option><option>Interventions / conférences</option><option>Thèmes à étudier</option><option>Services proposés</option><option>Achats de fournitures, matériel ou végétaux</option><option>Vie de l'association</option><option>Autre</option></select></div>
+<div class="suggestion-field"><label for="titre">Titre de votre suggestion *</label><input id="titre" name="titre" type="text" maxlength="180" placeholder="Ex. Visite d’un jardin remarquable" required></div>
 <div class="suggestion-field wide"><label for="suggestion">Votre suggestion *</label><textarea id="suggestion" name="suggestion" placeholder="Décrivez votre idée le plus simplement possible…" required></textarea></div>
 <div class="suggestion-field"><label for="lieu">Lieu / organisme</label><input id="lieu" name="lieu" type="text" placeholder="Facultatif"></div>
 <div class="suggestion-field"><label for="nom">Nom et prénom</label><input id="nom" name="nom" type="text" placeholder="Facultatif"></div>
@@ -71,7 +77,11 @@
 <p id="suggestion-status" class="suggestion-status" role="status" aria-live="polite" hidden></p>
 </form>
 <iframe name="suggestion-reponse" id="suggestion-reponse" title="Réponse à votre suggestion" hidden></iframe>
+</div>
+<aside class="suggestions-aside"><span class="botanical" aria-hidden="true">❧</span><blockquote>Chaque idée compte.</blockquote><p>Vos idées nourrissent nos projets et font grandir l’association.</p></aside>
+</div>
 </section>
+<div class="suggestions-landscape" role="img" aria-label="Paysage illustré des vallées et de l’Aulne à Châteaulin"></div>
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../assets/js/site.js?v=20260919-admin-sequence-1"></script>
