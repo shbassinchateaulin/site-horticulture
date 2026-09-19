@@ -1,5 +1,6 @@
 {
   "membershipUrl": "",
   "membershipYear": 2026,
-  "note": "Lien modifiable depuis la future administration du site. Le site public lit toujours cette valeur."
+  "membershipPrice": 20,
+  "membershipButtonLabel": "Adhérer en ligne"
 }
