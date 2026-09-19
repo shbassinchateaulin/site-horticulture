@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;max-width:100%;overflow-x:hidden;background:#fff;color:#173827;font-family:Arial,Helvetica,sans-serif}
+main{max-width:760px;margin:auto;padding:8px 12px 34px}
+form{border-top:1px solid #dbe3d8;padding-top:27px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0 23px}
+.field{margin:0 0 20px}
+.field.wide{grid-column:1/-1}
+label{display:block;margin-bottom:8px;color:#183c29;font-size:13px;font-weight:600}
+.required{color:#498050}
+input,select,textarea{display:block;width:100%;padding:13px 14px;border:1px solid #ccd7cd;border-radius:4px;background:white;color:#193a29;font:16px/1.45 Arial,Helvetica,sans-serif}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #397d4c;outline-offset:2px}
+textarea{min-height:142px;resize:vertical}
+.help{margin:8px 0 0;color:#637067;font-size:12px;line-height:1.6}
+button{border:0;border-radius:3px;background:#174b30;color:#fff;padding:14px 27px;font:600 13px Arial,Helvetica,sans-serif;cursor:pointer}
+button:hover{background:#286641}
+button:disabled{opacity:.6;cursor:wait}
+#message{margin:17px 0 0;padding:12px 15px;border-left:3px solid #a84b3d;background:#fbf1ef;color:#76382f;line-height:1.5}
+.confirmation{border-top:1px solid #dbe3d8;padding:45px 15px;text-align:center}
+.confirmation h2{font:normal 32px/1.2 Georgia,"Times New Roman",serif;color:#183c29}
+.confirmation p{max-width:540px;margin:16px auto;color:#536359;font-size:15px;line-height:1.7}
+.confirmation .mark{font-size:35px;color:#397d4c}
+@media(max-width:620px){main{padding:4px 16px 25px}.fields{display:block}.confirmation h2{font-size:27px}}
+</style>
+</head>
+<body>
+<main id="content">
+<form id="formulaire">
+<div class="fields">
+<div class="field wide">
+<label for="nature">Nature de votre suggestion <span class="required">*</span></label>
+<select id="nature" required>
+<option value="">Faites un choix</option>
+<option>Animations / activités</option>
+<option>Sorties / jardins à visiter</option>
+<option>Interventions / conférences</option>
+<option>Thèmes à étudier</option>
+<option>Services proposés</option>
+<option>Achats de fournitures, matériel ou végétaux</option>
+<option>Vie de l'association</option>
+<option>Autre</option>
+</select>
+</div>
+<div class="field wide"><label for="titre">Titre de votre suggestion <span class="required">*</span></label><input id="titre" type="text" placeholder="Ex. Visite d’un jardin remarquable" required></div>
+<div class="field wide"><label for="suggestion">Votre suggestion <span class="required">*</span></label><textarea id="suggestion" placeholder="Décrivez votre idée le plus simplement possible…" required></textarea></div>
+<div class="field"><label for="lieu">Lieu / organisme</label><input id="lieu" type="text" placeholder="Facultatif"></div>
+<div class="field"><label for="nom">Nom et prénom</label><input id="nom" type="text" placeholder="Facultatif"></div>
+<div class="field wide"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="email" placeholder="Votre adresse e-mail"><p class="help">Facultative, votre adresse nous permet de vous recontacter au sujet de votre proposition.</p></div>
+</div>
+<button id="bouton" type="submit">Envoyer ma suggestion</button>
+<p id="message" role="alert" hidden></p>
+</form>
+</main>
+<script>
+(function(){
+  var form = document.getElementById('formulaire');
+  var button = document.getElementById('bouton');
+  var message = document.getElementById('message');
+  function erreur(texte){
+    message.textContent = texte;
+    message.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Envoyer ma suggestion';
+  }
+  form.addEventListener('submit', function(event){
+    event.preventDefault();
+    if (button.disabled) return;
+    var data = {
+      nature: document.getElementById('nature').value,
+      titre: document.getElementById('titre').value.trim(),
+      suggestion: document.getElementById('suggestion').value.trim(),
+      lieu: document.getElementById('lieu').value.trim(),
+      nom: document.getElementById('nom').value.trim(),
+      email: document.getElementById('email').value.trim()
+    };
+    if (!data.nature || !data.titre || !data.suggestion) {
+      erreur('Merci de remplir les trois champs obligatoires.');
+      return;
+    }
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      erreur('Merci d’indiquer une adresse e-mail valide.');
+      return;
+    }
+    message.hidden = true;
+    button.disabled = true;
+    button.textContent = 'Envoi en cours…';
+    google.script.run
+      .withSuccessHandler(function(){
+        document.getElementById('content').innerHTML =
+          '<div class="confirmation"><div class="mark" aria-hidden="true">✓</div>'
+          + '<h2>Merci pour votre suggestion !</h2>'
+          + '<p>Votre proposition a bien été transmise à notre équipe et sera étudiée avec attention.</p>'
+          + '<p>L’envoi d’une suggestion ne garantit pas sa réalisation, mais chaque idée compte.</p></div>';
+      })
+      .withFailureHandler(function(error){
+        erreur(error && error.message ? error.message : 'Une erreur est survenue lors de l’envoi de votre suggestion.');
+      })
+      .enregistrerSuggestion(data);
+  });
+})();
+</script>
+</body>
+</html>
