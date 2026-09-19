@@ -115,7 +115,7 @@ if (suggestionsNativeEnabled) {
 
   window.addEventListener('message', function (event) {
     const response = event.data;
-    if (event.source !== document.getElementById('suggestion-reponse').contentWindow ||
+    if (!/^(https:\/\/script\.google(?:usercontent)?\.com|null)$/.test(event.origin) ||
         !response || response.type !== 'shbc-suggestion-response' ||
         !pendingId || response.requestId !== pendingId) return;
     clearTimeout(timeoutId);
