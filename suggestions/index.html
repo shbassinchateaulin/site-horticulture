@@ -56,7 +56,7 @@
 <span class="suggestions-rule" aria-hidden="true"></span>
 </div>
 
-<form id="suggestion-form" class="suggestion-form" action="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" method="post" target="suggestion-reponse" hidden>
+<form id="suggestion-form" class="suggestion-form" action="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" method="post" target="suggestion-reponse">
 <div class="suggestion-fields">
 <div class="suggestion-field wide"><label for="nature">Nature de votre suggestion *</label><select id="nature" name="nature" required><option value="">Faites un choix</option><option>Animations / activités</option><option>Sorties / jardins à visiter</option><option>Interventions / conférences</option><option>Thèmes à étudier</option><option>Services proposés</option><option>Achats de fournitures, matériel ou végétaux</option><option>Vie de l'association</option><option>Autre</option></select></div>
 <div class="suggestion-field wide"><label for="titre">Titre de votre suggestion *</label><input id="titre" name="titre" type="text" maxlength="180" placeholder="Ex. Visite d’un jardin remarquable" required></div>
@@ -71,30 +71,19 @@
 <p id="suggestion-status" class="suggestion-status" role="status" aria-live="polite" hidden></p>
 </form>
 <iframe name="suggestion-reponse" id="suggestion-reponse" title="Réponse à votre suggestion" hidden></iframe>
-<iframe class="suggestions-frame" title="Formulaire de suggestions de l’association" src="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" loading="lazy"></iframe>
-<p class="suggestions-alternative">Le formulaire ne s’affiche pas ? <a href="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" target="_blank" rel="noopener noreferrer">Ouvrir le formulaire dans un nouvel onglet ↗</a></p>
 </section>
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../assets/js/site.js?v=20260919-admin-sequence-1"></script>
 
 <script>
-/*
- * À activer seulement après installation du doPost dans le projet Apps Script
- * et redéploiement de l'application Web à la même URL /exec.
- */
-const suggestionsNativeEnabled = false;
-if (suggestionsNativeEnabled) {
+{
   const form = document.getElementById('suggestion-form');
-  const frame = document.querySelector('.suggestions-frame');
-  const alternative = document.querySelector('.suggestions-alternative');
   const status = document.getElementById('suggestion-status');
   const button = form.querySelector('button[type="submit"]');
   let pendingId = '';
   let timeoutId;
   form.hidden = false;
-  frame.hidden = true;
-  alternative.hidden = true;
 
   form.addEventListener('submit', function (event) {
     if (pendingId) { event.preventDefault(); return; }
