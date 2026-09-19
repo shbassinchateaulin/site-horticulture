@@ -48,3 +48,5 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
    if(typed==='admin'){typed='';e.preventDefault();openAdmin()}
  },true);
 })();
+// Accès discret : taper ADMIN (sans champ de saisie actif).
+(()=>{let s='',t;document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;if(e.key==='Escape'){s='';return}if(e.key.length!==1)return;s=(s+e.key.toLowerCase()).slice(-5);clearTimeout(t);t=setTimeout(()=>s='',2500);if(s==='admin'){s='';e.preventDefault();const base=location.pathname.startsWith('/site-horticulture/')?'/site-horticulture':'';location.assign(base+'/administration/')}},true)})();
