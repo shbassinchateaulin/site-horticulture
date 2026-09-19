@@ -31,22 +31,20 @@ if(actualitesLink&&window.matchMedia('(min-width:901px)').matches){
 const social=document.querySelector('.social');if(social){social.innerHTML='<span class="social-item social-mail" aria-label="Contactez-nous"><span class="social-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg></span><span class="social-label">Contactez-nous</span></span><a class="social-item social-facebook" href="https://www.facebook.com/groups/5336206996506252/" target="_blank" rel="noopener noreferrer"><span class="social-icon"><svg viewBox="0 0 24 24"><path d="M13.7 22v-9h3l.45-3.5H13.7V7.25c0-1.01.28-1.7 1.74-1.7h1.86V2.42c-.32-.04-1.43-.14-2.72-.14-2.69 0-4.53 1.64-4.53 4.66V9.5H7v3.5h3.05v9h3.65z"/></svg></span><span class="social-label">Rejoignez-nous</span></a>';}
 const newsletterForm=document.getElementById('newsletterForm');if(newsletterForm){newsletterForm.addEventListener('submit',async function(e){e.preventDefault();const email=document.getElementById('newsletterEmail'),consent=document.getElementById('newsletterConsent'),message=document.getElementById('newsletterMessage'),button=newsletterForm.querySelector('button[type="submit"]');if(!email||!consent||!consent.checked)return;const original=button.textContent;button.disabled=true;button.textContent='Inscription…';message.textContent='';try{await fetch('https://script.google.com/macros/s/AKfycbz9zvJ85a62Exi2K29_H3kB4JEisRLrX29hX_y9JsHPQByo8jIPlJRkK2CRueUzLXAwEA/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'email='+encodeURIComponent(email.value)+'&consentement='+consent.checked});message.textContent='✓ Merci pour votre inscription !';newsletterForm.reset();}catch(error){message.textContent='Impossible de finaliser l’inscription. Réessayez dans un instant.';}finally{button.disabled=false;button.textContent=original;}});}
 if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir/index.html')){const replaceArt=()=>{const old=document.querySelector('#panel .garden-art,#panel svg.empty-art');if(!old)return false;const img=document.createElement('img');img.className='empty-art';img.src='../assets/images/a-venir-empty.webp?v=20260917-fixed3';img.alt='';img.decoding='async';img.style.cssText='display:block;width:100%;max-width:520px;height:auto;margin:0 auto 14px;object-fit:contain';old.replaceWith(img);return true;};if(!replaceArt()){const panel=document.getElementById('panel');if(panel){const observer=new MutationObserver(()=>{if(replaceArt())observer.disconnect()});observer.observe(panel,{childList:true,subtree:true});}}}
-// Accès discret à l’administration.
-// Deux raccourcis pour éviter les combinaisons interceptées par le navigateur/système :
-// Ctrl+Alt+A (ou Control+Option+A sur Mac), et Alt+Shift+A en secours.
+// Accès discret à l’administration : séquence A D M I N.
 (()=>{
+ let typed='',timer;
  const openAdmin=()=>{
-  const path=location.pathname.replace(/\/+/g,'/');
-  const marker='/site-horticulture/';
-  let target;
-  if(path.includes(marker)) target=path.slice(0,path.indexOf(marker)+marker.length)+'administration/';
-  else target='/administration/';
-  location.assign(target);
+   const parts=location.pathname.split('/').filter(Boolean);
+   const project=parts[0]==='site-horticulture'?'/site-horticulture':'';
+   location.href=project+'/administration/';
  };
  document.addEventListener('keydown',e=>{
-  const key=(e.key||'').toLowerCase();
-  const primary=key==='a'&&e.ctrlKey&&e.altKey&&!e.metaKey;
-  const fallback=key==='a'&&e.altKey&&e.shiftKey&&!e.ctrlKey&&!e.metaKey;
-  if(primary||fallback){e.preventDefault();e.stopPropagation();openAdmin();}
+   if(e.ctrlKey||e.altKey||e.metaKey)return;
+   if(e.key==='Escape'){typed='';return}
+   if(e.key.length!==1)return;
+   typed=(typed+e.key.toLowerCase()).slice(-5);
+   clearTimeout(timer);timer=setTimeout(()=>typed='',2500);
+   if(typed==='admin'){typed='';e.preventDefault();openAdmin()}
  },true);
 })();
