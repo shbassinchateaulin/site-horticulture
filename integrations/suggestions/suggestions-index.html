@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suggestions | Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</title>
+<meta name="description" content="Proposez une sortie, une activité ou une idée pour la Société d’Horticulture et d’Art Floral du Bassin de Châteaulin.">
+<link rel="stylesheet" href="../assets/css/site.css">
+<style>
+.suggestions-hero{min-height:290px;display:flex;align-items:center;color:#fff;background:linear-gradient(90deg,rgba(4,38,24,.86),rgba(4,38,24,.38) 60%,rgba(4,38,24,.11)),url('../assets/images/chateaulin-hero.png') center 48%/cover no-repeat}
+.suggestions-hero-inner{width:min(1180px,100%);margin:auto;padding:46px 32px}
+.suggestions-hero h1{font:400 54px/1.1 var(--serif);margin:0}
+.suggestions-hero h1:after{content:"";display:block;width:38px;border-top:2px solid #a7ca93;margin:18px 0}
+.suggestions-hero p{max-width:570px;margin:0;font:400 17px/1.55 var(--serif)}
+.suggestions-wrap{width:min(1010px,100%);margin:auto;padding:56px 32px 65px}
+.suggestions-kicker{font:600 10px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#315f36;margin:0 0 14px}
+.suggestions-intro{max-width:750px;margin:0 auto 20px;text-align:center}
+.suggestions-intro h2{font:400 34px/1.22 var(--serif);color:#123626;margin:0 0 18px}
+.suggestions-intro p:last-child{font-size:14px;line-height:1.72;color:#526058;margin:0}
+.suggestions-rule{display:block;width:38px;border-top:2px solid #65936b;margin:28px auto 22px}
+.suggestions-frame{display:block;width:100%;height:990px;border:0;background:#fff}
+.suggestions-alternative{margin:3px 0 0;text-align:center;font-size:11px;color:#667369;line-height:1.6}
+.suggestions-alternative a{color:#215a37;font-weight:600;border-bottom:1px solid #7fac80;padding-bottom:2px}
+.suggestions-alternative a:hover{color:#377847}
+@media(max-width:900px){.suggestions-hero{min-height:255px}.suggestions-hero h1{font-size:43px}.suggestions-wrap{padding:46px 22px 58px}.suggestions-frame{height:1050px}}
+@media(max-width:620px){.suggestions-hero-inner{padding:36px 22px}.suggestions-hero h1{font-size:38px}.suggestions-hero p{font-size:14px}.suggestions-wrap{padding:38px 0 48px}.suggestions-intro{padding:0 20px}.suggestions-intro h2{font-size:28px}.suggestions-frame{height:1080px}.suggestions-alternative{padding:0 20px}}
+
+.suggestions-wrap [hidden]{display:none!important}
+.suggestion-form{max-width:760px;margin:0 auto;border-top:1px solid #dbe3d8;padding-top:27px}
+.suggestion-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 23px}
+.suggestion-field{margin:0 0 20px}
+.suggestion-field.wide{grid-column:1/-1}
+.suggestion-field label{display:block;color:#183c29;font-size:13px;font-weight:600;margin-bottom:8px}
+.suggestion-field input,.suggestion-field select,.suggestion-field textarea{display:block;width:100%;padding:13px 14px;background:#fff;color:#193a29;border:1px solid #ccd7cd;border-radius:4px;font:16px/1.45 var(--sans);outline:none}
+.suggestion-field :is(input,select,textarea):focus-visible{border-color:#316744;box-shadow:0 0 0 3px rgba(49,103,68,.14)}
+.suggestion-field textarea{min-height:142px;resize:vertical}
+.suggestion-field .help{font-size:12px;line-height:1.6;color:#637067;margin:8px 0 0}
+.suggestion-submit{border:0;background:#174b30;color:white;padding:14px 27px;font:600 13px var(--sans);cursor:pointer;border-radius:3px}
+.suggestion-submit:hover{background:#286641}
+.suggestion-submit:disabled{opacity:.6;cursor:wait}
+.suggestion-status{margin:17px 0 0;padding:12px 15px;border-left:3px solid #a84b3d;background:#fbf1ef;color:#76382f;line-height:1.5}
+.suggestion-status.success{border-color:#397d4c;background:#edf4ec;color:#16432a}
+.suggestion-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+@media(max-width:620px){.suggestion-form{margin:0 20px}.suggestion-fields{display:block}}
+</style>
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../"><img class="brand-logo" src="../assets/images/logo.png" alt="Logo de la Société d’Horticulture"><div class="brand-name">Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</div></a><nav class="main-nav"><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a><a href="../contact/">Contact</a><a class="active" aria-current="page" href="./">Suggestions</a></nav><div class="header-right"><span class="search-icon"></span><a class="join" href="../adhesion/">Adhérer <b>→</b></a></div><button class="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button></header>
+<main>
+<section class="suggestions-hero"><div class="suggestions-hero-inner"><h1>Suggestions</h1><p>Partageons vos idées pour faire vivre l’association.</p></div></section>
+<section class="suggestions-wrap" aria-labelledby="suggestions-title">
+<div class="suggestions-intro">
+<p class="suggestions-kicker">La parole aux membres et aux visiteurs</p>
+<h2 id="suggestions-title">Une idée à partager ?</h2>
+<p>Une sortie, un atelier, une conférence ou une amélioration pour l’association : racontez-nous ce que vous aimeriez voir. Toutes les propositions sont les bienvenues.</p>
+<span class="suggestions-rule" aria-hidden="true"></span>
+</div>
+
+<form id="suggestion-form" class="suggestion-form" action="https://script.google.com/macros/s/AKfycbzBUYU7YjtMjd2_sq8VS5-xXDT8iX8xaq_XOsjQNuQaVkRCAMG6D9HEV1yijKUvRy8t/exec" method="post" target="suggestion-reponse">
+<div class="suggestion-fields">
+<div class="suggestion-field wide"><label for="nature">Nature de votre suggestion *</label><select id="nature" name="nature" required><option value="">Faites un choix</option><option>Animations / activités</option><option>Sorties / jardins à visiter</option><option>Interventions / conférences</option><option>Thèmes à étudier</option><option>Services proposés</option><option>Achats de fournitures, matériel ou végétaux</option><option>Vie de l'association</option><option>Autre</option></select></div>
+<div class="suggestion-field wide"><label for="titre">Titre de votre suggestion *</label><input id="titre" name="titre" type="text" maxlength="180" placeholder="Ex. Visite d’un jardin remarquable" required></div>
+<div class="suggestion-field wide"><label for="suggestion">Votre suggestion *</label><textarea id="suggestion" name="suggestion" placeholder="Décrivez votre idée le plus simplement possible…" required></textarea></div>
+<div class="suggestion-field"><label for="lieu">Lieu / organisme</label><input id="lieu" name="lieu" type="text" placeholder="Facultatif"></div>
+<div class="suggestion-field"><label for="nom">Nom et prénom</label><input id="nom" name="nom" type="text" placeholder="Facultatif"></div>
+<div class="suggestion-field wide"><label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" placeholder="Votre adresse e-mail"><p class="help">Facultative, votre adresse nous permet de vous recontacter au sujet de votre proposition.</p></div>
+</div>
+<div class="suggestion-trap" aria-hidden="true"><label for="website">Site web</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+<input name="requestId" id="suggestion-request-id" type="hidden">
+<button class="suggestion-submit" type="submit">Envoyer ma suggestion</button>
+<p id="suggestion-status" class="suggestion-status" role="status" aria-live="polite" hidden></p>
+</form>
+<iframe name="suggestion-reponse" id="suggestion-reponse" title="Réponse à votre suggestion" hidden></iframe>
+</section>
+</main>
+<footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
+<script src="../assets/js/site.js?v=20260919-admin-sequence-1"></script>
+
+<script>
+{
+  const form = document.getElementById('suggestion-form');
+  const status = document.getElementById('suggestion-status');
+  const button = form.querySelector('button[type="submit"]');
+  let pendingId = '';
+  let timeoutId;
+  form.hidden = false;
+
+  form.addEventListener('submit', function (event) {
+    if (pendingId) { event.preventDefault(); return; }
+    pendingId = crypto.randomUUID();
+    document.getElementById('suggestion-request-id').value = pendingId;
+    button.disabled = true;
+    button.textContent = 'Envoi en cours…';
+    status.hidden = true;
+    timeoutId = setTimeout(function () {
+      pendingId = '';
+      button.disabled = false;
+      button.textContent = 'Envoyer ma suggestion';
+      status.className = 'suggestion-status';
+      status.textContent = 'La confirmation tarde à arriver. Vérifiez auprès de l’association avant de renvoyer votre suggestion.';
+      status.hidden = false;
+    }, 30000);
+  });
+
+  window.addEventListener('message', function (event) {
+    const response = event.data;
+    if (!/^(https:\/\/script\.google(?:usercontent)?\.com|null)$/.test(event.origin) ||
+        !response || response.type !== 'shbc-suggestion-response' ||
+        !pendingId || response.requestId !== pendingId) return;
+    clearTimeout(timeoutId);
+    pendingId = '';
+    button.disabled = false;
+    button.textContent = 'Envoyer ma suggestion';
+    status.className = response.ok ? 'suggestion-status success' : 'suggestion-status';
+    status.textContent = response.ok
+      ? 'Merci pour votre suggestion ! Elle a bien été transmise à notre équipe et sera étudiée avec attention.'
+      : (response.message || 'Une erreur est survenue lors de l’envoi.');
+    status.hidden = false;
+    if (response.ok) form.reset();
+  });
+}
+</script>
+</body>
+</html>
