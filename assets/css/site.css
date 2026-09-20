@@ -2,3 +2,46 @@
 @media(max-width:900px){.site-header{height:78px;padding:0 14px;gap:10px}.brand{min-width:0;gap:8px;flex:1}.brand-logo{width:49px;height:60px}.brand-name{font-size:10px;line-height:1.25}.main-nav,.search-icon{display:none}.menu-toggle{display:block;order:2;border:0;background:none;color:#1683c4;font-size:0;margin-left:auto}.menu-toggle:after{content:'☰';font-size:23px}.header-right{order:3}.join{padding:11px 14px;font-size:12px}.join b{display:none}.hero{height:600px;background-image:linear-gradient(180deg,rgba(3,29,16,.1),rgba(3,29,16,.17) 38%,rgba(3,29,16,.72)),url('../images/chateaulin-hero.png');background-position:60% center}.hero-copy{left:22px;right:22px;top:auto;bottom:52px}.eyebrow{font-size:11px}.hero h1{font-size:33px;line-height:1.08}.hero-copy>p:last-of-type{font-size:13px}.hero-actions{gap:10px;margin-top:18px}.hero-actions a{padding:12px 16px;font-size:12px}.handwritten{display:none!important}.hero-curve{width:72%;height:95px;bottom:-64px}.content{display:flex;flex-direction:column;padding:18px 0 0;gap:0;overflow:hidden}.news{order:1;padding:0 18px 18px}.events{order:2;margin:0;padding:18px;background:#fbfaf4;border:0;border-radius:0}.section-title,.events-head{align-items:center;margin-bottom:12px;gap:8px}.section-title h2,.events h2{font-size:22px}.section-title h2:after{display:none}.section-title>a,.events-head>a{font-size:10px;margin-left:auto;white-space:nowrap}.news-grid{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;gap:10px;padding:0 18px 6px 0;margin-right:-18px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}.news-grid::-webkit-scrollbar,.outing-grid::-webkit-scrollbar{display:none}.news-grid article{display:grid!important;grid-template-columns:48% 52%;flex:0 0 78%!important;width:78%!important;min-width:78%!important;height:126px;min-height:126px;scroll-snap-align:start;border-radius:8px}.news-grid .pic{height:126px!important;min-height:126px}.news-grid .card{height:126px;min-height:0;padding:9px 10px;overflow:hidden}.news-grid .card time{font-size:8px}.news-grid .card h3{font-size:13px;margin:4px 0 5px}.news-grid .card p{font-size:9px;line-height:1.25;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.news-grid .card a{font-size:9px}.events .optional-items{border-top:1px solid #dfe5dc}.event{margin:0;border:0;border-bottom:1px solid #dfe5dc;border-radius:0;background:transparent;min-height:55px;grid-template-columns:58px 1fr 15px}.event span b{font-family:var(--sans);font-size:11px}.all-events{display:none}.upcoming{padding:20px 18px 22px}.events-feature{background:#fffdf8}.outings{background:#fbfaf4}.outing-grid{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;gap:10px;padding:0 18px 5px 0;margin-right:-18px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}.outing-grid article{flex:0 0 62%!important;width:62%!important;min-width:62%!important;scroll-snap-align:start;border-radius:8px}.outing-photo{height:112px}.outing-photo time{left:8px;top:auto;bottom:7px;padding:5px 7px}.outing-photo time b{font-size:17px}.outing-grid article>div:last-child{padding:8px 9px 10px}.outing-grid h3{font-size:12px;line-height:1.2;margin:2px 0 3px}.outing-grid p{display:none}.outing-grid a{font-size:9px}.type-label{font-size:7px}.flower-cutout{display:none}.flower-strip{height:150px;padding:20px}.footer-grid{grid-template-columns:1fr 1fr;gap:18px}.legal em{float:none;display:block}}
 @media(max-width:600px){.site-header{height:80px}.brand-logo{width:52px;height:62px}.brand-name{font-size:10.5px}.join{font-size:13px;padding:12px 15px}.hero{height:600px}.hero h1{font-size:31px}.hero-actions{flex-direction:column;align-items:flex-start}.hero-actions a{min-width:205px;text-align:center}.news-grid article{flex-basis:80%!important;width:80%!important;min-width:80%!important}.outing-grid article{flex-basis:64%!important;width:64%!important;min-width:64%!important}footer{padding:25px 18px}.footer-grid{grid-template-columns:1fr}}
 @media(max-width:420px){.site-header{padding:0 10px}.brand-logo{width:47px;height:58px}.brand-name{font-size:9.5px}.join{padding:10px 12px;font-size:12px}.hero{height:570px}.hero-copy{left:18px;right:18px;bottom:42px}.hero h1{font-size:28px}.hero-copy>p:last-of-type{font-size:12px}.hero-actions a{min-width:195px}.section-title h2,.events h2{font-size:20px}.news-grid article{flex-basis:82%!important;width:82%!important;min-width:82%!important}.outing-grid article{flex-basis:66%!important;width:66%!important;min-width:66%!important}}
+
+/* Navigation mobile commune */
+@media(max-width:900px){
+ .site-header{z-index:100;overflow:visible;gap:8px}
+ .site-header .brand{order:0;flex:1 1 auto;min-width:0}
+ .site-header .brand-name{min-width:0}
+ .site-header .header-right{order:1;flex:0 0 auto;margin-left:auto;gap:0}
+ .site-header .menu-toggle{order:2;display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;margin:0;padding:0;border:0;background:transparent;color:var(--deep);cursor:pointer;touch-action:manipulation}
+ .site-header .menu-toggle:after{font-size:27px;line-height:1}
+ .site-header .menu-toggle:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:4px}
+ .site-header .main-nav{display:none;position:absolute;top:100%;left:0;right:0;width:100%;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;margin:0;padding:10px 18px 16px;background:#fbfaf6;border-bottom:1px solid #dbe3d8;box-shadow:0 12px 20px #073b2918;max-height:calc(100vh - 80px);max-height:calc(100dvh - 80px);overflow-y:auto;white-space:normal}
+ .site-header .main-nav.open{display:flex}
+ .site-header .main-nav a{height:auto;min-height:44px;padding:12px 10px;font-size:15px;border-bottom:1px solid #e4e9e0}
+ .site-header .main-nav a.active{color:var(--deep);font-weight:600;background:#edf2e9}
+ .site-header .main-nav a:last-child{border-bottom:0}
+}
+@media(max-width:380px){
+ .site-header{padding:0 10px;gap:5px}
+ .site-header .brand{gap:5px}
+ .site-header .brand-logo{width:42px}
+ .site-header .brand-name{font-size:9px}
+ .site-header .join{padding:10px 9px;font-size:11px}
+}
+/* Newsletter commune et lisible sur téléphone */
+footer{background:#073b29}
+footer .newsletter-footer{display:grid;grid-template-columns:minmax(220px,1fr) minmax(310px,1.4fr);align-items:start;gap:28px;margin-top:26px;padding:24px 0 4px;border-top:1px solid #ffffff38}
+footer .newsletter-footer h3{font:400 21px/1.3 var(--serif);margin:0 0 8px;color:#fff}
+footer .newsletter-footer p{font-size:13px;line-height:1.55;color:#dce7dd;margin:0;max-width:480px}
+footer .newsletter-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-width:0}
+footer .newsletter-email-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+footer .newsletter-form input[type=email]{width:100%;min-width:0;height:44px;border:1px solid #ffffff60;border-radius:5px;background:#ffffff0d;color:white;padding:0 12px;font:16px var(--sans)}
+footer .newsletter-form input[type=email]::placeholder{color:#cfddd3}
+footer .newsletter-form button{height:44px;border:0;border-radius:5px;padding:0 20px;background:#f4f1e7;color:#17472f;font:600 13px var(--sans);cursor:pointer}
+footer .newsletter-form button:disabled{opacity:.65;cursor:wait}
+footer .newsletter-consent{grid-column:1/-1;display:flex;align-items:flex-start;gap:9px;font:12px/1.5 var(--sans);color:#e0e9e2}
+footer .newsletter-consent input{margin:2px 0 0;width:17px;height:17px;flex:0 0 17px;accent-color:#93b692}
+footer .newsletter-form .newsletter-message{grid-column:1/-1;font-size:13px;min-height:1.5em;max-width:none}
+footer :is(.newsletter-form input,.newsletter-form button,.social-mail):focus-visible{outline:2px solid #d8eacb;outline-offset:3px}
+@media(max-width:700px){
+ footer .newsletter-footer{grid-template-columns:1fr;gap:17px;margin-top:22px;padding-top:22px}
+ footer .newsletter-footer h3{font-size:20px}
+ footer .newsletter-form button{padding:0 15px}
+}
