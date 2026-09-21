@@ -93,22 +93,95 @@ const social=document.querySelector('.social');if(social){social.innerHTML='<a c
 })();
 
 if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir/index.html')){const replaceArt=()=>{const old=document.querySelector('#panel .garden-art,#panel svg.empty-art');if(!old)return false;const img=document.createElement('img');img.className='empty-art';img.src='../assets/images/a-venir-empty.webp?v=20260917-fixed3';img.alt='';img.decoding='async';img.style.cssText='display:block;width:100%;max-width:520px;height:auto;margin:0 auto 14px;object-fit:contain';old.replaceWith(img);return true;};if(!replaceArt()){const panel=document.getElementById('panel');if(panel){const observer=new MutationObserver(()=>{if(replaceArt())observer.disconnect()});observer.observe(panel,{childList:true,subtree:true});}}}
-// Accès discret à l’administration : séquence A D M I N.
+// Accès discret à l’administration : taper A D M I N sur une page publique.
 (()=>{
- let typed='',timer;
- const openAdmin=()=>{
-   const parts=location.pathname.split('/').filter(Boolean);
-   const project=parts[0]==='site-horticulture'?'/site-horticulture':'';
-   location.href=project+'/administration/';
+ if(document.getElementById('horticultureAdminAccess'))return;
+ let typed='',timer,lastFocus=null;
+
+ const projectBase=()=>{
+  const parts=location.pathname.split('/').filter(Boolean);
+  return parts[0]==='site-horticulture'?'/site-horticulture':'';
  };
- document.addEventListener('keydown',e=>{
-   if(e.ctrlKey||e.altKey||e.metaKey)return;
-   if(e.key==='Escape'){typed='';return}
-   if(e.key.length!==1)return;
-   typed=(typed+e.key.toLowerCase()).slice(-5);
-   clearTimeout(timer);timer=setTimeout(()=>typed='',2500);
-   if(typed==='admin'){typed='';e.preventDefault();openAdmin()}
+ const adminURL=projectBase()+'/administration/';
+ const api=()=>String(window.HORTICULTURE_ADMIN_API||'').replace(/\/$/,'');
+
+ const style=document.createElement('style');
+ style.textContent=`
+  .admin-access[hidden]{display:none!important}
+  .admin-access{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px}
+  .admin-access-backdrop{position:absolute;inset:0;background:rgba(250,250,246,.76);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+  .admin-access-dialog{position:relative;width:min(430px,100%);padding:31px 31px 27px;border:1px solid rgba(37,71,51,.18);border-radius:13px;background:#fffdf8;box-shadow:0 24px 75px rgba(18,48,32,.2);color:#183226}
+  .admin-access-close{position:absolute;right:13px;top:12px;width:35px;height:35px;border:0;border-radius:50%;background:transparent;color:#607067;font-size:24px;line-height:1;cursor:pointer}
+  .admin-access-mark{margin:0 0 12px;color:#477454;font:600 9px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase}
+  .admin-access-dialog h2{margin:0;font:400 31px/1.16 var(--serif);color:#15382a}
+  .admin-access-intro{margin:10px 0 21px;color:#647067;font:12px/1.6 var(--sans)}
+  .admin-access-field{display:grid;gap:7px;margin:14px 0}
+  .admin-access-field label{color:#2f503c;font:600 10px/1.4 var(--sans);letter-spacing:.04em}
+  .admin-access-field input{width:100%;height:45px;border:1px solid #c8d4c9;border-radius:7px;background:#fff;padding:0 12px;color:#20342a;font:14px var(--sans);outline:none}
+  .admin-access-field input:focus{border-color:#39704c;box-shadow:0 0 0 3px rgba(57,112,76,.1)}
+  .admin-access-submit{width:100%;height:46px;margin-top:8px;border:0;border-radius:7px;background:#225d3a;color:#fff;font:600 12px var(--sans);cursor:pointer}
+  .admin-access-submit:hover{background:#194d30}.admin-access-submit:disabled{opacity:.65;cursor:wait}
+  .admin-access-status{min-height:18px;margin:12px 0 0;color:#6d4a41;font:11px/1.55 var(--sans)}
+  .admin-access-note{margin:13px 0 0;padding-top:13px;border-top:1px solid #e0e5de;color:#7a847d;font:10px/1.5 var(--sans)}
+  body.admin-access-open{overflow:hidden}
+  @media(max-width:520px){.admin-access{padding:15px}.admin-access-dialog{padding:28px 21px 23px}.admin-access-dialog h2{font-size:28px}}
+ `;
+ document.head.appendChild(style);
+
+ const layer=document.createElement('div');
+ layer.id='horticultureAdminAccess';layer.className='admin-access';layer.hidden=true;
+ layer.innerHTML=`
+  <div class="admin-access-backdrop" data-admin-close></div>
+  <section class="admin-access-dialog" role="dialog" aria-modal="true" aria-labelledby="adminAccessTitle" aria-describedby="adminAccessIntro">
+   <button class="admin-access-close" type="button" aria-label="Fermer" data-admin-close>×</button>
+   <p class="admin-access-mark">Espace réservé</p>
+   <h2 id="adminAccessTitle">Administration</h2>
+   <p class="admin-access-intro" id="adminAccessIntro">Connectez-vous pour accéder aux outils de gestion du site.</p>
+   <form id="adminAccessForm">
+    <div class="admin-access-field"><label for="adminAccessUser">Identifiant</label><input id="adminAccessUser" name="username" autocomplete="username" required></div>
+    <div class="admin-access-field"><label for="adminAccessPass">Mot de passe ou code</label><input id="adminAccessPass" name="password" type="password" autocomplete="current-password" required></div>
+    <button class="admin-access-submit" type="submit">Connexion</button>
+    <p class="admin-access-status" id="adminAccessStatus" role="status" aria-live="polite"></p>
+   </form>
+   <p class="admin-access-note">L’authentification sécurisée nécessite le service d’administration privé. Aucun secret n’est stocké dans le site public.</p>
+  </section>
+ `;
+ document.body.appendChild(layer);
+
+ const form=layer.querySelector('#adminAccessForm'),user=layer.querySelector('#adminAccessUser'),pass=layer.querySelector('#adminAccessPass');
+ const status=layer.querySelector('#adminAccessStatus'),submit=form.querySelector('button[type=submit]');
+ const open=()=>{
+  lastFocus=document.activeElement;layer.hidden=false;document.body.classList.add('admin-access-open');status.textContent='';
+  requestAnimationFrame(()=>user.focus());
+ };
+ const close=()=>{
+  layer.hidden=true;document.body.classList.remove('admin-access-open');pass.value='';status.textContent='';
+  if(lastFocus&&typeof lastFocus.focus==='function')lastFocus.focus();
+ };
+ layer.querySelectorAll('[data-admin-close]').forEach(el=>el.addEventListener('click',close));
+ document.addEventListener('keydown',event=>{
+  if(!layer.hidden){if(event.key==='Escape'){event.preventDefault();close()}return}
+  if(event.ctrlKey||event.altKey||event.metaKey||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;
+  if(event.key.length!==1)return;
+  typed=(typed+event.key.toLowerCase()).slice(-5);clearTimeout(timer);timer=setTimeout(()=>typed='',2500);
+  if(typed==='admin'){typed='';event.preventDefault();open()}
  },true);
+ layer.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const focusable=[...layer.querySelectorAll('button,input')].filter(el=>!el.disabled);
+  const first=focusable[0],last=focusable.at(-1);
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+ });
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();status.textContent='';
+  if(!api()){status.textContent='Le service sécurisé n’est pas encore relié. La connexion sera activée lors de la mise en place du backend.';return}
+  submit.disabled=true;submit.textContent='Connexion…';
+  try{
+   const response=await fetch(api()+'/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value})});
+   if(!response.ok)throw new Error(response.status===401?'Identifiant ou mot de passe incorrect.':'Connexion momentanément indisponible.');
+   pass.value='';location.assign(adminURL);
+  }catch(error){status.textContent=error.message||'Connexion impossible.'}
+  finally{submit.disabled=false;submit.textContent='Connexion'}
+ });
 })();
-// Accès discret : taper ADMIN (sans champ de saisie actif).
-(()=>{let s='',t;document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;if(e.key==='Escape'){s='';return}if(e.key.length!==1)return;s=(s+e.key.toLowerCase()).slice(-5);clearTimeout(t);t=setTimeout(()=>s='',2500);if(s==='admin'){s='';e.preventDefault();const base=location.pathname.startsWith('/site-horticulture/')?'/site-horticulture':'';location.assign(base+'/administration/')}},true)})();
