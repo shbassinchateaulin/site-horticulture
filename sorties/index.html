@@ -46,6 +46,20 @@
 .outings-empty h2{margin:0 0 11px;font:400 28px/1.25 var(--serif);color:#17382a}
 .outings-empty p{margin:0;font-size:14px;line-height:1.7;color:#5c695f}
 .outings-error{color:#6b4a42}
+.outings-retrospective{border-top:1px solid #d4ddd1;background:#eef2e9;padding:50px 40px 58px}
+.outings-retrospective-inner{width:min(1200px,100%);margin:auto}
+.outings-retrospective-kicker{margin:0 0 8px;font:600 10px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:#4e7456}
+.outings-retrospective h2{margin:0;font:400 34px/1.2 var(--serif);color:#17372a}
+.outings-retrospective-intro{max-width:620px;margin:12px 0 0;color:#59675d;font-size:14px;line-height:1.7}
+.retro-empty{margin:28px 0 0;padding:20px 0;border-top:1px solid #cad5c8;color:#68756b;font:italic 16px/1.6 var(--serif)}
+.retro-seasons{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-top:30px}
+.retro-season{padding:22px 0 0;border-top:1px solid #aebead}
+.retro-season h3{margin:0 0 5px;font:400 23px/1.25 var(--serif);color:#1e4734}
+.retro-count{margin:0 0 15px;color:#6c786f;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.retro-list{margin:0;padding:0;list-style:none}
+.retro-list li{padding:10px 0;border-top:1px solid #d6ded3}
+.retro-list strong{display:block;font:400 16px/1.35 var(--serif);color:#263e32}
+.retro-list span{display:block;margin-top:3px;color:#758077;font-size:12px}
 @media(max-width:900px){
  .outings-hero{min-height:330px}.outings-hero-copy{padding:45px 28px}.outings-hero:after{background:linear-gradient(90deg,#f8f6eff5 0%,#f8f6efdc 55%,#f8f6ef68)}
  .outings-section{padding:43px 25px 61px}.outing-step{width:45%}.outing-copy h3{font-size:23px}
@@ -58,6 +72,7 @@
  .outing-step:last-of-type{margin-bottom:0}.outing-step .outing-pin,.outing-step:nth-of-type(odd) .outing-pin,.outing-step:nth-of-type(even) .outing-pin{left:-35px;right:auto;top:14px}
  .outing-photo{aspect-ratio:16/9}.outing-copy{padding-top:16px}.outing-copy h3{font-size:24px}
  .outings-empty{padding-top:18px}
+ .outings-retrospective{padding:38px 20px 44px}.outings-retrospective h2{font-size:30px}.retro-seasons{grid-template-columns:1fr;gap:19px}
 }
 </style>
 </head>
@@ -79,6 +94,15 @@
 </div>
 <div id="outingsEmpty" class="outings-empty" hidden><span class="outings-empty-mark" aria-hidden="true">❧</span><h2>De prochaines découvertes se préparent</h2><p>Les nouvelles sorties de l’association seront présentées ici dès leur publication.</p></div>
 </section>
+<section class="outings-retrospective" aria-labelledby="retrospectiveTitle">
+<div class="outings-retrospective-inner">
+<p class="outings-retrospective-kicker">Nos souvenirs</p>
+<h2 id="retrospectiveTitle">Rétrospective</h2>
+<p class="outings-retrospective-intro">Retrouvez les visites, escapades et séjours des saisons précédentes.</p>
+<div id="retrospectiveSeasons" class="retro-seasons" hidden></div>
+<p id="retrospectiveEmpty" class="retro-empty">Les premières rétrospectives apparaîtront ici à la fin de chaque saison.</p>
+</div>
+</section>
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../assets/js/site.js?v=20260920-ui-2"></script>
@@ -88,6 +112,7 @@
  const loading=document.getElementById('outingsLoading'),content=document.getElementById('outingsContent');
  const empty=document.getElementById('outingsEmpty'),route=document.getElementById('outingsRoute');
  const season=document.getElementById('outingsSeason');
+ const retrospective=document.getElementById('retrospectiveSeasons'),retrospectiveEmpty=document.getElementById('retrospectiveEmpty');
  const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
  const parsedId=id=>{const m=String(id||'').toUpperCase().match(/^S0*(\d+)([A-Z]{3})$/);return m?{number:Number(m[1]),season:m[2]}:null};
  const seasonLabel=code=>{
@@ -123,10 +148,27 @@
   path.setAttribute('d',d);
  };
  const showEmpty=()=>{loading.hidden=true;content.hidden=true;empty.hidden=false};
+ const renderRetrospective=(valid,latest)=>{
+  const groups=new Map();
+  valid.filter(entry=>entry.parsed.season!==latest).forEach(entry=>{
+   if(!groups.has(entry.parsed.season))groups.set(entry.parsed.season,[]);
+   groups.get(entry.parsed.season).push(entry);
+  });
+  retrospective.innerHTML='';
+  const seasons=[...groups.keys()].sort().reverse();
+  retrospective.hidden=!seasons.length;retrospectiveEmpty.hidden=Boolean(seasons.length);
+  seasons.forEach(code=>{
+   const entries=groups.get(code).sort((a,b)=>a.parsed.number-b.parsed.number);
+   const block=document.createElement('article');block.className='retro-season';
+   block.innerHTML='<h3>'+esc(seasonLabel(code))+'</h3><p class="retro-count">'+entries.length+' sortie'+(entries.length>1?'s':'')+'</p><ul class="retro-list">'+entries.map(({item})=>'<li><strong>'+esc(item.title||item.titre||'Sortie de l’association')+'</strong><span>'+esc(dateLabel(item))+'</span></li>').join('')+'</ul>';
+   retrospective.appendChild(block);
+  });
+ };
  const render=items=>{
   const valid=(items||[]).map(item=>({item,parsed:parsedId(item.id)})).filter(entry=>entry.parsed&&entry.item.status!=='draft'&&entry.item.status!=='deleted');
-  if(!valid.length){showEmpty();return}
+  if(!valid.length){renderRetrospective([],null);showEmpty();return}
   const latest=[...new Set(valid.map(x=>x.parsed.season))].sort().at(-1);
+  renderRetrospective(valid,latest);
   const current=valid.filter(x=>x.parsed.season===latest).sort((a,b)=>a.parsed.number-b.parsed.number);
   if(!current.length){showEmpty();return}
   season.textContent=seasonLabel(latest);
