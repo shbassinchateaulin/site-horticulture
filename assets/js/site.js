@@ -158,6 +158,25 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   layer.hidden=true;document.body.classList.remove('admin-access-open');pass.value='';status.textContent='';
   if(lastFocus&&typeof lastFocus.focus==='function')lastFocus.focus();
  };
+ const menuToggle=document.querySelector('.menu-toggle');
+ if(menuToggle){
+  let touchAdminTimer=null,suppressMenuClick=false;
+  const cancelTouchAdmin=()=>{clearTimeout(touchAdminTimer);touchAdminTimer=null};
+  menuToggle.addEventListener('pointerdown',event=>{
+   if(event.pointerType==='mouse')return;
+   cancelTouchAdmin();
+   touchAdminTimer=setTimeout(()=>{
+    suppressMenuClick=true;touchAdminTimer=null;
+    if(navigator.vibrate)navigator.vibrate(35);
+    open();
+   },1700);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(name=>menuToggle.addEventListener(name,cancelTouchAdmin));
+  menuToggle.addEventListener('click',event=>{
+   if(!suppressMenuClick)return;
+   event.preventDefault();event.stopImmediatePropagation();suppressMenuClick=false;
+  },true);
+ }
  layer.querySelectorAll('[data-admin-close]').forEach(el=>el.addEventListener('click',close));
  document.addEventListener('keydown',event=>{
   if(!layer.hidden){if(event.key==='Escape'){event.preventDefault();close()}return}
