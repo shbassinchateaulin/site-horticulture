@@ -178,8 +178,11 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   if(!api()){status.textContent='Le service sécurisé n’est pas encore relié. La connexion sera activée lors de la mise en place du backend.';return}
   submit.disabled=true;submit.textContent='Connexion…';
   try{
-   const response=await fetch(api()+'/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value})});
-   if(!response.ok)throw new Error(response.status===401?'Identifiant ou mot de passe incorrect.':'Connexion momentanément indisponible.');
+   const response=await fetch(api()+'/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value,scope:'site-admin'})});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(data.error||(response.status===401?'Identifiant ou mot de passe incorrect.':'Connexion momentanément indisponible.'));
+   if(data.sessionToken)sessionStorage.setItem('horticulture_admin_session',data.sessionToken);
+   if(data.user)sessionStorage.setItem('horticulture_admin_user',JSON.stringify(data.user));
    pass.value='';location.assign(adminURL);
   }catch(error){status.textContent=error.message||'Connexion impossible.'}
   finally{submit.disabled=false;submit.textContent='Connexion'}
