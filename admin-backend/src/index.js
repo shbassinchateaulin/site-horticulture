@@ -98,7 +98,16 @@ async function authenticateWithGoogleSheet(env,credentials){
  if(!response.ok)throw Object.assign(new Error('Le service des comptes est indisponible.'),{status:502});
  let data;try{data=await response.json()}catch{throw Object.assign(new Error('Réponse invalide du service des comptes.'),{status:502})}
  if(!data?.ok)return{authenticated:false};
- return{authenticated:true,user:data.user||{}};
+ // Never treat an unrelated Apps Script {ok:true} response as a successful login.
+ if(!data.user||typeof data.user!=='object'||Array.isArray(data.user)||
+    !data.user.username||!data.user.role){
+  console.warn('Unexpected account response from Apps Script',{
+   hasUser:!!data.user,hasUsers:Array.isArray(data.users),
+   finalHost:new URL(response.url).hostname
+  });
+  throw Object.assign(new Error('Réponse d’authentification incomplète. Vérifiez le déploiement Apps Script.'),{status:502});
+ }
+ return{authenticated:true,user:data.user};
 }
 
 async function saveMembership(request,env){
