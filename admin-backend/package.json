@@ -6,7 +6,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:local": "wrangler d1 execute horticulture-admin --local --file=schema.sql",
-    "db:remote": "wrangler d1 execute horticulture-admin --remote --file=schema.sql"
+    "db:remote": "wrangler d1 execute horticulture-admin --remote --file=schema.sql",
+    "db:migrate-google-auth": "wrangler d1 execute horticulture-admin --remote --file=migrations/0002_google_sheet_auth.sql"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

@@ -9,6 +9,7 @@ GITHUB_OWNER = "shbassinchateaulin"
 SITE_REPO = "site-horticulture"
 CONTENT_REPO = "horticulture-contenus"
 GITHUB_BRANCH = "main"
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwim8t9oVshwze47JG0KeuvdiE3hqjwM6pXts9KA48HSd-jLOP5A3V2cyfN6nVMSp5H/exec"
 
 [[d1_databases]]
 binding = "DB"

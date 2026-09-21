@@ -12,7 +12,7 @@ const encoder=new TextEncoder();
 export default {
  async fetch(request,env){
   try{return await handle(request,env)}
-  catch(error){console.error(error);return json({error:'Erreur interne du service.'},500,request,env)}
+  catch(error){console.error(error);const status=Number(error?.status)||500;return json({error:status===500?'Erreur interne du service.':error.message},status,request,env)}
  }
 };
 
@@ -57,21 +57,18 @@ async function login(request,env){
   await recordAttempt(env,clientKey,username,false);
   return json({error:'Identifiant ou mot de passe incorrect.'},401,request,env);
  }
- let user=await env.DB.prepare('SELECT id,username,password_hash,password_salt,password_iterations,role,active FROM users WHERE username = ?').bind(username).first();
- if(!user){
-  const count=await env.DB.prepare('SELECT COUNT(*) AS total FROM users').first();
-  if(Number(count?.total||0)===0&&env.BOOTSTRAP_USERNAME&&env.BOOTSTRAP_PASSWORD&&username===String(env.BOOTSTRAP_USERNAME).toLowerCase()&&password===env.BOOTSTRAP_PASSWORD){
-   const credentials=await hashPassword(password);
-   await env.DB.prepare('INSERT INTO users (username,password_hash,password_salt,password_iterations,role,active,created_at) VALUES (?,?,?,?,?,?,?)')
-    .bind(username,credentials.hash,credentials.salt,credentials.iterations,'super_admin',1,new Date().toISOString()).run();
-   user=await env.DB.prepare('SELECT id,username,password_hash,password_salt,password_iterations,role,active FROM users WHERE username = ?').bind(username).first();
-  }
- }
- const valid=!!(user&&user.active&&await verifyPassword(password,user.password_salt,user.password_hash,user.password_iterations));
+ const sheetResult=await authenticateWithGoogleSheet(env,{username,password,scope:String(body.scope||'')});
+ const valid=!!sheetResult?.authenticated;
  await recordAttempt(env,clientKey,username,valid);
  if(!valid)return json({error:'Identifiant ou mot de passe incorrect.'},401,request,env);
- const permissions=permissionsFor(user.role);
+ const sheetUser=sheetResult.user||{},role=normalizeRole([sheetUser.role,sheetUser.function,sheetUser.username].join(' ')),permissions=normalizePermissions(sheetUser.permissions,role);
  if(String(body.scope||'')==='site-admin'&&!permissions.includes('*')&&!permissions.includes('admin.access'))return json({error:'Ce compte ne possède pas les droits d’accès à l’administration du site.'},403,request,env);
+ const now=new Date().toISOString();
+ await env.DB.prepare(`INSERT INTO users (external_id,username,display_name,email,password_hash,password_salt,password_iterations,role,permissions,active,created_at)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?)
+  ON CONFLICT(username) DO UPDATE SET external_id=excluded.external_id,display_name=excluded.display_name,email=excluded.email,role=excluded.role,permissions=excluded.permissions,active=excluded.active`)
+  .bind(String(sheetUser.id||''),username,String(sheetUser.displayName||'').slice(0,160),String(sheetUser.email||'').slice(0,254),'','',0,role,JSON.stringify(permissions),1,now).run();
+ const user=await env.DB.prepare('SELECT id,username,role,permissions,active FROM users WHERE username = ?').bind(username).first();
  await env.DB.prepare('DELETE FROM login_attempts WHERE client_key = ?').bind(clientKey).run();
  const token=randomToken(32),tokenHash=await sha256(token),expiresAt=new Date(Date.now()+SESSION_HOURS*3600000).toISOString();
  await env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(new Date().toISOString()).run();
@@ -85,9 +82,23 @@ async function authenticate(request,env){
  if(!token)token=parseCookies(request.headers.get('Cookie')||'').sh_admin_session||'';
  if(!token)return null;
  const tokenHash=await sha256(token);
- const row=await env.DB.prepare('SELECT s.token_hash,s.expires_at,u.id,u.username,u.role,u.active FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?').bind(tokenHash).first();
+ const row=await env.DB.prepare('SELECT s.token_hash,s.expires_at,u.id,u.username,u.role,u.permissions,u.active FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?').bind(tokenHash).first();
  if(!row||!row.active||new Date(row.expires_at)<=new Date()){if(row)await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(tokenHash).run();return null}
- return{...row,tokenHash,permissions:permissionsFor(row.role)};
+ return{...row,tokenHash,permissions:normalizePermissions(parsePermissions(row.permissions),row.role)};
+}
+
+async function authenticateWithGoogleSheet(env,credentials){
+ const endpoint=String(env.GOOGLE_APPS_SCRIPT_URL||'').trim();
+ const secret=String(env.GOOGLE_APPS_SCRIPT_SHARED_SECRET||'');
+ if(!endpoint||!secret)throw Object.assign(new Error('Le service Google Sheets n’est pas configuré.'),{status:503});
+ const response=await fetch(endpoint,{
+  method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=UTF-8'},
+  body:JSON.stringify({action:'backendAuthenticate',backendSecret:secret,...credentials})
+ });
+ if(!response.ok)throw Object.assign(new Error('Le service des comptes est indisponible.'),{status:502});
+ let data;try{data=await response.json()}catch{throw Object.assign(new Error('Réponse invalide du service des comptes.'),{status:502})}
+ if(!data?.ok)return{authenticated:false};
+ return{authenticated:true,user:data.user||{}};
 }
 
 async function saveMembership(request,env){
@@ -152,6 +163,15 @@ function parseCookies(value){return Object.fromEntries(value.split(';').map(v=>v
 function sessionCookie(token){return'sh_admin_session='+encodeURIComponent(token)+'; Path=/; Max-Age='+(SESSION_HOURS*3600)+'; HttpOnly; Secure; SameSite=None'}
 function expiredCookie(){return'sh_admin_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None'}
 function permissionsFor(role){return ROLE_PERMISSIONS[String(role||'member')]||[]}
+function normalizeRole(value){
+ const role=String(value||'member').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s-]+/g,'_');
+ if(role.includes('super')&&role.includes('admin'))return'super_admin';
+ if(role==='admin'||role.includes('administrateur'))return'admin';
+ if(role.includes('publisher')||role.includes('publieur')||role.includes('publication'))return'publisher';
+ return'member';
+}
+function parsePermissions(value){try{return Array.isArray(value)?value:JSON.parse(String(value||'[]'))}catch{return[]}}
+function normalizePermissions(value,role){const supplied=parsePermissions(value).map(String).filter(Boolean);return[...new Set([...permissionsFor(role),...supplied])]}
 function hasPermission(session,permission){return session.permissions.includes('*')||session.permissions.includes(permission)}
 function forbidden(request,env){return json({error:'Droits insuffisants pour cette opération.'},403,request,env)}
 function allowedOrigins(env){return new Set(String(env.ALLOWED_ORIGINS||'https://shbassinchateaulin.github.io').split(',').map(x=>x.trim()).filter(Boolean))}
