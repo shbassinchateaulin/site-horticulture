@@ -158,35 +158,38 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   layer.hidden=true;document.body.classList.remove('admin-access-open');pass.value='';status.textContent='';
   if(lastFocus&&typeof lastFocus.focus==='function')lastFocus.focus();
  };
- const menuToggle=document.querySelector('.menu-toggle');
- if(menuToggle){
-  let touchAdminTimer=null,suppressMenuClick=false,startX=0,startY=0;
-  const cancelTouchAdmin=()=>{clearTimeout(touchAdminTimer);touchAdminTimer=null};
-  menuToggle.addEventListener('touchstart',event=>{
+ const enableTouchAdmin=target=>{
+  if(!target)return;
+  target.style.webkitTouchCallout='none';
+  let touchAdminTimer=null,suppressClick=false,startX=0,startY=0;
+  const cancel=()=>{clearTimeout(touchAdminTimer);touchAdminTimer=null};
+  target.addEventListener('touchstart',event=>{
    if(event.touches.length!==1)return;
-   cancelTouchAdmin();suppressMenuClick=false;
+   cancel();suppressClick=false;
    startX=event.touches[0].clientX;startY=event.touches[0].clientY;
    touchAdminTimer=setTimeout(()=>{
-    suppressMenuClick=true;touchAdminTimer=null;
+    suppressClick=true;touchAdminTimer=null;
     if(navigator.vibrate)navigator.vibrate(35);
     open();
    },1500);
   },{passive:true});
-  menuToggle.addEventListener('touchmove',event=>{
+  target.addEventListener('touchmove',event=>{
    if(!touchAdminTimer||!event.touches[0])return;
-   if(Math.abs(event.touches[0].clientX-startX)>12||Math.abs(event.touches[0].clientY-startY)>12)cancelTouchAdmin();
+   if(Math.abs(event.touches[0].clientX-startX)>12||Math.abs(event.touches[0].clientY-startY)>12)cancel();
   },{passive:true});
-  menuToggle.addEventListener('touchend',event=>{
-   cancelTouchAdmin();
-   if(suppressMenuClick){event.preventDefault();event.stopPropagation();setTimeout(()=>suppressMenuClick=false,400)}
+  target.addEventListener('touchend',event=>{
+   cancel();
+   if(suppressClick){event.preventDefault();event.stopPropagation();setTimeout(()=>suppressClick=false,400)}
   },{passive:false});
-  menuToggle.addEventListener('touchcancel',cancelTouchAdmin,{passive:true});
-  menuToggle.addEventListener('contextmenu',event=>event.preventDefault());
-  menuToggle.addEventListener('click',event=>{
-   if(!suppressMenuClick)return;
+  target.addEventListener('touchcancel',cancel,{passive:true});
+  target.addEventListener('contextmenu',event=>event.preventDefault());
+  target.addEventListener('click',event=>{
+   if(!suppressClick)return;
    event.preventDefault();event.stopImmediatePropagation();
   },true);
- }
+ };
+ enableTouchAdmin(document.querySelector('.site-header .join'));
+ enableTouchAdmin(document.querySelector('.site-header .menu-toggle'));
  layer.querySelectorAll('[data-admin-close]').forEach(el=>el.addEventListener('click',close));
  document.addEventListener('keydown',event=>{
   if(!layer.hidden){if(event.key==='Escape'){event.preventDefault();close()}return}
