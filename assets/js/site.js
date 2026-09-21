@@ -130,7 +130,7 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   return parts[0]==='site-horticulture'?'/site-horticulture':'';
  };
  const adminURL=projectBase()+'/administration/';
- const api=()=>String(window.HORTICULTURE_ADMIN_API||'').replace(/\/$/,'');
+  const api=()=>String(window.HORTICULTURE_ADMIN_API||'https://horticulture-admin.shbassinchateaulin.workers.dev').replace(/\/$/,'');
 
  const style=document.createElement('style');
  style.textContent=`
