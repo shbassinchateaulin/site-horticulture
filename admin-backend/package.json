@@ -1,0 +1,14 @@
+{
+  "name": "horticulture-admin-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 execute horticulture-admin --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute horticulture-admin --remote --file=schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
