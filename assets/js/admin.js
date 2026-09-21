@@ -1,4 +1,4 @@
-const API=String(window.HORTICULTURE_ADMIN_API||'').replace(/\/$/,'');
+const API=String(window.HORTICULTURE_ADMIN_API||'https://horticulture-admin.shbassinchateaulin.workers.dev').replace(/\/$/,'');
 const $=selector=>document.querySelector(selector);
 const login=$('#login'),app=$('#adminApp'),loginStatus=$('#loginStatus');
 const sessionKey='horticulture_admin_session',userKey='horticulture_admin_user';
