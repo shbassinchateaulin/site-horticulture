@@ -45,3 +45,11 @@ footer :is(.newsletter-form input,.newsletter-form button,.social-mail):focus-vi
  footer .newsletter-footer h3{font-size:20px}
  footer .newsletter-form button{padding:0 15px}
 }
+
+/* Barre commune vers la page Rétrospective */
+.retrospective-link-bar{width:min(1160px,calc(100% - 80px));margin:0 auto 62px;padding:25px 0;border-top:1px solid #cbd5ca;border-bottom:1px solid #cbd5ca;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.retrospective-link-bar p{margin:0;color:#58675d;font:400 17px/1.5 var(--serif)}
+.retrospective-link-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;flex:0 0 auto;min-height:48px;padding:0 23px;border-radius:7px;background:#285e3b;color:#fff;text-decoration:none;font:600 12px/1 var(--sans);letter-spacing:.02em;box-shadow:0 7px 18px rgba(29,73,44,.12);transition:background .2s,transform .2s}
+.retrospective-link-button:hover{background:#1f4f31;transform:translateY(-1px)}
+.retrospective-link-button span{font-size:18px;font-weight:400}
+@media(max-width:680px){.retrospective-link-bar{width:calc(100% - 40px);margin-bottom:46px;display:block;padding:21px 0}.retrospective-link-bar p{font-size:16px}.retrospective-link-button{width:100%;margin-top:17px}}
