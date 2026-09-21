@@ -47,13 +47,10 @@ if(actualitesLink&&window.matchMedia('(min-width:901px)').matches){
    if(!latest.length)preview.remove();
   }).catch(err=>{console.warn('Aperçu des actualités indisponible',err);preview.remove()});
 }
-const social=document.querySelector('.social');if(social){social.innerHTML='<a class="social-item social-mail" href="#" aria-label="Contactez-nous"><span class="social-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg></span><span class="social-label">Contactez-nous</span></a><a class="social-item social-facebook" href="https://www.facebook.com/groups/5336206996506252/" target="_blank" rel="noopener noreferrer"><span class="social-icon"><svg viewBox="0 0 24 24"><path d="M13.7 22v-9h3l.45-3.5H13.7V7.25c0-1.01.28-1.7 1.74-1.7h1.86V2.42c-.32-.04-1.43-.14-2.72-.14-2.69 0-4.53 1.64-4.53 4.66V9.5H7v3.5h3.05v9h3.65z"/></svg></span><span class="social-label">Rejoignez-nous</span></a>';}
-// Le footer partage le même formulaire et le même lien de contact sur toutes les pages.
+// Les anciens raccourcis enveloppe et Facebook ne font plus partie du pied de page.
+document.querySelectorAll('.social').forEach(element=>element.remove());
+// Le footer partage le même formulaire sur toutes les pages.
 (()=>{
- const script=document.currentScript;
- const siteRoot=new URL('../../',script.src);
- const contact=document.querySelector('.social-mail');
- if(contact)contact.href=new URL('contact/',siteRoot).href;
  const footer=document.querySelector('footer');
  if(!footer)return;
  let newsletter=footer.querySelector('.newsletter-footer');
@@ -90,6 +87,33 @@ const social=document.querySelector('.social');if(social){social.innerHTML='<a c
    message.textContent='La confirmation n’a pas pu être reçue. Contactez l’association si nécessaire.';
   }finally{button.disabled=false;button.textContent='S’inscrire'}
  });
+})();
+
+// Safari sur iPad peut ignorer la hauteur minimale d'un body en flexbox.
+// On réserve alors au contenu principal la hauteur visible restante afin que
+// le pied de page touche toujours le bas de l'écran, sans recouvrir le contenu.
+(()=>{
+ const main=document.querySelector('body > main');
+ const footer=document.querySelector('body > footer');
+ if(!main||!footer)return;
+ const header=document.querySelector('body > .site-header');
+ const fitFooter=()=>{
+  const viewport=Math.max(window.innerHeight||0,document.documentElement.clientHeight||0);
+  const headerHeight=header?header.getBoundingClientRect().height:0;
+  const footerHeight=footer.getBoundingClientRect().height;
+  main.style.minHeight=Math.max(0,Math.ceil(viewport-headerHeight-footerHeight))+'px';
+ };
+ fitFooter();
+ requestAnimationFrame(fitFooter);
+ window.addEventListener('load',fitFooter,{once:true});
+ window.addEventListener('resize',fitFooter,{passive:true});
+ window.addEventListener('orientationchange',fitFooter,{passive:true});
+ if(window.visualViewport)window.visualViewport.addEventListener('resize',fitFooter,{passive:true});
+ if('ResizeObserver' in window){
+  const observer=new ResizeObserver(fitFooter);
+  observer.observe(footer);
+  if(header)observer.observe(header);
+ }
 })();
 
 if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir/index.html')){const replaceArt=()=>{const old=document.querySelector('#panel .garden-art,#panel svg.empty-art');if(!old)return false;const img=document.createElement('img');img.className='empty-art';img.src='../assets/images/a-venir-empty.webp?v=20260917-fixed3';img.alt='';img.decoding='async';img.style.cssText='display:block;width:100%;max-width:520px;height:auto;margin:0 auto 14px;object-fit:contain';old.replaceWith(img);return true;};if(!replaceArt()){const panel=document.getElementById('panel');if(panel){const observer=new MutationObserver(()=>{if(replaceArt())observer.disconnect()});observer.observe(panel,{childList:true,subtree:true});}}}

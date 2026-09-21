@@ -73,12 +73,16 @@ footer :is(.newsletter-form input,.newsletter-form button,.social-mail):focus-vi
  .site-header .main-nav a.active{color:#315f36!important;font-weight:600!important}
 }
 
-/* Pied de page stable et lisible sur tablette */
-html{min-height:100%}
-body{min-height:100vh;display:flex;flex-direction:column}
+/* Pied de page stable et lisible, y compris dans Safari sur iPad */
+html{height:100%;min-height:100%;background:var(--cream)}
+body{min-height:100%;min-height:100vh;min-height:100svh;display:flex!important;flex-direction:column!important}
 body>.site-header{flex:0 0 auto}
-body>main{width:100%;flex:1 0 auto}
-body>footer{width:100%;flex:0 0 auto;margin-top:auto}
+body>main{width:100%;flex:1 0 auto!important}
+body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
+.social{display:none!important}
+@supports (min-height:100dvh){body{min-height:100dvh}}
+@media(min-width:1101px){body footer .footer-grid{grid-template-columns:2fr 1fr 1.25fr 1.2fr!important}}
+@media(max-width:900px){body footer .footer-grid{grid-template-columns:minmax(0,1.7fr) minmax(100px,.7fr)!important}}
 @media(min-width:901px) and (max-width:1100px){
  footer{padding:32px 32px 20px!important}
  .footer-grid{display:grid!important;grid-template-columns:minmax(250px,1.7fr) minmax(100px,.8fr) minmax(135px,1fr) minmax(90px,.7fr)!important;gap:24px!important;align-items:start!important}
