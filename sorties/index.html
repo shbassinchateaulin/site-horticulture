@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sorties & découvertes | Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</title>
+<meta name="description" content="Découvrez les visites, escapades et séjours proposés par la Société d’Horticulture et d’Art Floral du Bassin de Châteaulin.">
+<link rel="stylesheet" href="../assets/css/site.css?v=20260920-ui-2">
+<style>
+.outings-page{background:#fbfaf5;color:#14271f}
+.outings-hero{position:relative;isolation:isolate;min-height:370px;display:flex;align-items:center;overflow:hidden;background:#f5f3eb}
+.outings-hero:before{content:"";position:absolute;inset:0;z-index:-2;background:url("../assets/images/suggestions-carnet.webp") 68% 50%/cover no-repeat;filter:saturate(.82)}
+.outings-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#f8f6ef 0%,#f8f6eff7 31%,#f8f6efcf 45%,#f8f6ef30 69%,#f8f6ef0a)}
+.outings-hero-copy{width:min(1200px,100%);margin:auto;padding:58px 42px}
+.outings-kicker{margin:0 0 17px;font:600 10px/1.4 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:#376746}
+.outings-hero h1{max-width:690px;margin:0 0 19px;font:400 clamp(46px,5.1vw,72px)/1.05 var(--serif);letter-spacing:-.035em;color:#132b22}
+.outings-hero p:last-child{max-width:580px;margin:0;font:400 18px/1.6 var(--serif);color:#2f4036}
+.outings-section{width:min(1280px,100%);margin:auto;padding:54px 40px 76px}
+.outings-heading{display:flex;justify-content:space-between;align-items:end;gap:30px;padding-bottom:18px;border-bottom:1px solid #cfd8cd}
+.outings-heading h2{margin:0;font:400 31px/1.2 var(--serif);color:#17372a}
+.outings-season{margin:0;color:#617065;font-size:12px}
+.outings-route{position:relative;margin-top:34px}
+.outings-route-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.outings-route-path{fill:none;stroke:#65856a;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:2 8}
+.outing-step{position:relative;z-index:1;width:min(550px,47%);margin-bottom:86px}
+.outing-step:nth-of-type(odd){margin-right:auto}
+.outing-step:nth-of-type(even){margin-left:auto}
+.outing-step:last-of-type{margin-bottom:0}
+.outing-pin{position:absolute;top:18px;width:17px;height:17px;border:4px solid #fbfaf5;border-radius:50%;background:#315f36;box-shadow:0 0 0 1px #315f36}
+.outing-step:nth-of-type(odd) .outing-pin{right:-37px}
+.outing-step:nth-of-type(even) .outing-pin{left:-37px}
+.outing-photo{aspect-ratio:16/10;background:#e5ebe2 center/cover no-repeat;overflow:hidden}
+.outing-copy{padding:20px 3px 0}
+.outing-meta{display:flex;flex-wrap:wrap;gap:7px 18px;margin-bottom:10px;color:#47644e;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.outing-copy h3{margin:0 0 10px;font:400 27px/1.22 var(--serif);color:#143326}
+.outing-copy p{margin:0;max-width:520px;font-size:13px;line-height:1.68;color:#536158}
+.outing-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}
+.outing-link{display:inline-flex;align-items:center;gap:18px;padding:11px 16px;border:1px solid #315f36;color:#204b30;font-size:12px;font-weight:600}
+.outing-link.primary{background:#315f36;color:#fff}
+.outing-step.is-past{opacity:.72}
+.outing-step.is-past .outing-photo{filter:grayscale(.48) saturate(.55)}
+.outing-step.is-past .outing-pin{background:#849087;box-shadow:0 0 0 1px #849087}
+.outing-status{display:inline-block;margin-bottom:9px;color:#68756c;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+.outings-empty{max-width:680px;margin:0 auto;padding:28px 10px 4px;text-align:center}
+.outings-empty-mark{display:block;margin:0 auto 16px;color:#769074;font:400 48px/1 var(--serif)}
+.outings-empty h2{margin:0 0 11px;font:400 28px/1.25 var(--serif);color:#17382a}
+.outings-empty p{margin:0;font-size:14px;line-height:1.7;color:#5c695f}
+.outings-error{color:#6b4a42}
+@media(max-width:900px){
+ .outings-hero{min-height:330px}.outings-hero-copy{padding:45px 28px}.outings-hero:after{background:linear-gradient(90deg,#f8f6eff5 0%,#f8f6efdc 55%,#f8f6ef68)}
+ .outings-section{padding:43px 25px 61px}.outing-step{width:45%}.outing-copy h3{font-size:23px}
+}
+@media(max-width:680px){
+ .outings-hero{min-height:360px}.outings-hero:before{background-position:66% center}.outings-hero:after{background:#f8f6efcf}
+ .outings-hero-copy{padding:39px 21px}.outings-hero h1{font-size:43px}.outings-hero p:last-child{font-size:16px}
+ .outings-section{padding:36px 20px 49px}.outings-heading{display:block}.outings-season{margin-top:8px}
+ .outings-route{padding-left:29px}.outings-route-svg{left:0;width:28px}.outing-step,.outing-step:nth-of-type(odd),.outing-step:nth-of-type(even){width:100%;margin:0 0 51px}
+ .outing-step:last-of-type{margin-bottom:0}.outing-step .outing-pin,.outing-step:nth-of-type(odd) .outing-pin,.outing-step:nth-of-type(even) .outing-pin{left:-35px;right:auto;top:14px}
+ .outing-photo{aspect-ratio:16/9}.outing-copy{padding-top:16px}.outing-copy h3{font-size:24px}
+ .outings-empty{padding-top:18px}
+}
+</style>
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../"><img class="brand-logo" src="../assets/images/logo.png" alt="Logo de la Société d’Horticulture"><div class="brand-name">Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</div></a><nav class="main-nav"><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a class="active" aria-current="page" href="./">Sorties</a><a href="../association/">L’association</a><a href="../contact/">Contact</a><a href="../suggestions/">Suggestions</a></nav><div class="header-right"><span class="search-icon"></span><a class="join" href="../adhesion/">Adhérer <b>→</b></a></div><button class="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button></header>
+<main class="outings-page">
+<section class="outings-hero">
+<div class="outings-hero-copy">
+<p class="outings-kicker">Jardins · Patrimoine · Évasion</p>
+<h1>Sorties & découvertes</h1>
+<p>Des jardins à explorer, des lieux à découvrir et des moments à partager, le temps d’une visite ou d’un séjour.</p>
+</div>
+</section>
+<section class="outings-section" aria-live="polite">
+<div id="outingsLoading" class="outings-empty"><span class="outings-empty-mark" aria-hidden="true">❧</span><p>Chargement des prochaines découvertes…</p></div>
+<div id="outingsContent" hidden>
+<div class="outings-heading"><h2>Au fil de nos sorties</h2><p id="outingsSeason" class="outings-season"></p></div>
+<div id="outingsRoute" class="outings-route"><svg class="outings-route-svg" aria-hidden="true"><path class="outings-route-path"></path></svg></div>
+</div>
+<div id="outingsEmpty" class="outings-empty" hidden><span class="outings-empty-mark" aria-hidden="true">❧</span><h2>De prochaines découvertes se préparent</h2><p>Les nouvelles sorties de l’association seront présentées ici dès leur publication.</p></div>
+</section>
+</main>
+<footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../">Accueil</a><a href="../actualites/">Actualités</a><a href="../a-venir/">À venir</a><a href="../sorties/">Sorties</a><a href="../association/">L’association</a></div><div><h4>Informations</h4><a href="../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
+<script src="../assets/js/site.js?v=20260920-ui-2"></script>
+<script>
+(()=>{
+ const ROOT='https://raw.githubusercontent.com/shbassinchateaulin/horticulture-contenus/main/sorties/';
+ const loading=document.getElementById('outingsLoading'),content=document.getElementById('outingsContent');
+ const empty=document.getElementById('outingsEmpty'),route=document.getElementById('outingsRoute');
+ const season=document.getElementById('outingsSeason');
+ const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+ const parsedId=id=>{const m=String(id||'').toUpperCase().match(/^S0*(\d+)([A-Z]{3})$/);return m?{number:Number(m[1]),season:m[2]}:null};
+ const seasonLabel=code=>{
+  if(!/^[A-Z]{3}$/.test(code||''))return'';
+  const offset=(code.charCodeAt(0)-65)*676+(code.charCodeAt(1)-65)*26+(code.charCodeAt(2)-65);
+  const start=2025+offset;return'Saison '+start+'–'+(start+1);
+ };
+ const iso=value=>{if(!value)return null;const d=new Date(String(value).length===10?value+'T12:00:00':value);return Number.isNaN(d.getTime())?null:d};
+ const dateLabel=item=>{
+  const start=iso(item.startDate||item.date||item.dateStart),end=iso(item.endDate||item.dateEnd);
+  if(!start)return'';
+  const same=end&&start.toDateString()===end.toDateString();
+  const fmt=d=>new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',year:'numeric'}).format(d);
+  return end&&!same?'Du '+fmt(start)+' au '+fmt(end):fmt(start);
+ };
+ const media=(item,src)=>{
+  if(!src)return'';
+  if(typeof src==='object')src=src.url||src.downloadUrl||src.src||'';
+  if(/^(https?:|data:|blob:|\/)/i.test(src))return src;
+  return ROOT+encodeURIComponent(item.id)+'/'+String(src).replace(/^\.\//,'');
+ };
+ const isPast=item=>{const end=iso(item.endDate||item.dateEnd||item.startDate||item.date||item.dateStart);if(!end)return false;end.setHours(23,59,59,999);return end<new Date()};
+ const duration=item=>item.duration||item.duree||item.type||'Sortie';
+ const detailURL=item=>item.detailUrl||item.pageUrl||item.url||'';
+ const bookingURL=item=>item.membershipUrl||item.registrationUrl||item.bookingUrl||item.helloAssoUrl||item.helloassoUrl||'';
+ const drawRoute=()=>{
+  const cards=[...route.querySelectorAll('.outing-step')],path=route.querySelector('.outings-route-path'),svg=route.querySelector('svg');
+  if(cards.length<2){path.setAttribute('d','');return}
+  const box=route.getBoundingClientRect(),points=cards.map(card=>{const pin=card.querySelector('.outing-pin').getBoundingClientRect();return{x:pin.left+pin.width/2-box.left,y:pin.top+pin.height/2-box.top}});
+  svg.setAttribute('viewBox','0 0 '+Math.max(1,box.width)+' '+Math.max(1,box.height));
+  let d='M '+points[0].x+' '+points[0].y;
+  for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],mid=(a.y+b.y)/2;d+=' C '+a.x+' '+mid+', '+b.x+' '+mid+', '+b.x+' '+b.y}
+  path.setAttribute('d',d);
+ };
+ const showEmpty=()=>{loading.hidden=true;content.hidden=true;empty.hidden=false};
+ const render=items=>{
+  const valid=(items||[]).map(item=>({item,parsed:parsedId(item.id)})).filter(entry=>entry.parsed&&entry.item.status!=='draft'&&entry.item.status!=='deleted');
+  if(!valid.length){showEmpty();return}
+  const latest=[...new Set(valid.map(x=>x.parsed.season))].sort().at(-1);
+  const current=valid.filter(x=>x.parsed.season===latest).sort((a,b)=>a.parsed.number-b.parsed.number);
+  if(!current.length){showEmpty();return}
+  season.textContent=seasonLabel(latest);
+  route.querySelectorAll('.outing-step').forEach(node=>node.remove());
+  current.forEach(({item},index)=>{
+   const past=isPast(item),photo=media(item,item.cover||item.photo||(item.photos&&item.photos[0]));
+   const article=document.createElement('article');article.className='outing-step'+(past?' is-past':'');
+   const detail=detailURL(item),booking=!past&&bookingURL(item);
+   article.innerHTML='<span class="outing-pin" aria-hidden="true"></span>'+
+    '<div class="outing-photo"'+(photo?' style="background-image:url(&quot;'+esc(photo)+'&quot;)"':'')+'></div>'+
+    '<div class="outing-copy">'+(past?'<span class="outing-status">Sortie passée</span>':'')+
+    '<div class="outing-meta"><span>'+esc(duration(item))+'</span><span>'+esc(dateLabel(item))+'</span></div>'+
+    '<h3>'+esc(item.title||item.titre||'Sortie de l’association')+'</h3>'+
+    (item.summary||item.resume||item.description?'<p>'+esc(item.summary||item.resume||item.description)+'</p>':'')+
+    '<div class="outing-actions">'+
+    (detail?'<a class="outing-link" href="'+esc(detail)+'">Découvrir la sortie <span>→</span></a>':'')+
+    (booking?'<a class="outing-link primary" href="'+esc(booking)+'" target="_blank" rel="noopener noreferrer">'+esc(item.bookingLabel||item.registrationLabel||'S’inscrire')+' <span>→</span></a>':'')+
+    '</div></div>';
+   route.appendChild(article);
+  });
+  loading.hidden=true;empty.hidden=true;content.hidden=false;
+  requestAnimationFrame(drawRoute);
+ };
+ fetch(ROOT+'index.json?ts='+Date.now(),{cache:'no-store'}).then(response=>{
+  if(response.status===404)return{sorties:[]};
+  if(!response.ok)throw new Error('Contenu indisponible');
+  return response.json();
+ }).then(data=>render(Array.isArray(data)?data:(data.sorties||data.outings||data.items||[]))).catch(()=>showEmpty());
+ let timer;addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(drawRoute,120)});
+})();
+</script>
+</body>
+</html>
