@@ -1,63 +1,9 @@
 [
   {
-    "date": "2026-06-27",
-    "time": "04:45",
-    "title": "Excursion île de Groix",
-    "location": "Départ Lycée horticole",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-04-01",
-    "time": "12:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-02-18",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-03-11",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Foyer",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
     "date": "2026-05-06",
     "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-10-14",
-    "time": "12:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
-    "past": false,
-    "source": "google"
-  },
-  {
-    "date": "2026-01-24",
-    "time": "14:00",
-    "title": "Conservation des fruits et légumes",
-    "location": "Lycée horticole de Châteaulin",
     "description": "",
     "past": true,
     "source": "google"
@@ -72,10 +18,28 @@
     "source": "google"
   },
   {
-    "date": "2026-01-21",
+    "date": "2026-09-23",
+    "time": "12:30",
+    "title": "Cours d’art floral",
+    "location": "Foyer",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-11-18",
     "time": "13:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-03-11",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Foyer",
     "description": "",
     "past": true,
     "source": "google"
@@ -108,12 +72,48 @@
     "source": "google"
   },
   {
-    "date": "2026-09-23",
-    "time": "12:30",
+    "date": "2026-06-27",
+    "time": "04:45",
+    "title": "Excursion île de Groix",
+    "location": "Départ Lycée horticole",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-02-18",
+    "time": "13:30",
     "title": "Cours d’art floral",
-    "location": "Foyer",
+    "location": "Mairie",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-12-05",
+    "time": "14:00",
+    "title": "Cultiver des légumes sains",
+    "location": "Lycée horticole de Châteaulin",
     "description": "",
     "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-12-16",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Mairie",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-01-21",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Mairie",
+    "description": "",
+    "past": true,
     "source": "google"
   },
   {
@@ -126,8 +126,44 @@
     "source": "google"
   },
   {
-    "date": "2026-11-18",
-    "time": "13:30",
+    "date": "2026-01-24",
+    "time": "14:00",
+    "title": "Conservation des fruits et légumes",
+    "location": "Lycée horticole de Châteaulin",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-11-14",
+    "time": "13:00",
+    "title": "Bourse aux plantes",
+    "location": "Salle des fêtes – Châteaulin",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-03-21",
+    "time": "13:00",
+    "title": "Tailles arbustes & fruitiers",
+    "location": "Parc communal de St-Coulitz",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-02-21",
+    "time": "13:00",
+    "title": "Tailles arbustes & fruitiers",
+    "location": "Landudal – Jardin Hascoet",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-10-14",
+    "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
     "description": "",
@@ -144,24 +180,6 @@
     "source": "google"
   },
   {
-    "date": "2026-03-21",
-    "time": "13:00",
-    "title": "Tailles arbustes & fruitiers",
-    "location": "Parc communal de St-Coulitz",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-12-05",
-    "time": "14:00",
-    "title": "Cultiver des légumes sains",
-    "location": "Lycée horticole de Châteaulin",
-    "description": "",
-    "past": false,
-    "source": "google"
-  },
-  {
     "date": "2026-04-10",
     "time": "18:00",
     "title": "Les orchidées",
@@ -171,21 +189,12 @@
     "source": "google"
   },
   {
-    "date": "2026-02-21",
-    "time": "13:00",
-    "title": "Tailles arbustes & fruitiers",
-    "location": "Landudal – Jardin Hascoet",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-12-16",
-    "time": "13:30",
+    "date": "2026-04-01",
+    "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
     "description": "",
-    "past": false,
+    "past": true,
     "source": "google"
   },
   {
@@ -195,15 +204,6 @@
     "location": "Lycée horticole de Châteaulin",
     "description": "",
     "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-11-14",
-    "time": "13:00",
-    "title": "Bourse aux plantes",
-    "location": "Salle des fêtes – Châteaulin",
-    "description": "",
-    "past": false,
     "source": "google"
   },
   {
