@@ -47,10 +47,13 @@ if(actualitesLink&&window.matchMedia('(min-width:901px)').matches){
    if(!latest.length)preview.remove();
   }).catch(err=>{console.warn('Aperçu des actualités indisponible',err);preview.remove()});
 }
-// Les anciens raccourcis enveloppe et Facebook ne font plus partie du pied de page.
-document.querySelectorAll('.social').forEach(element=>element.remove());
-// Le footer partage le même formulaire sur toutes les pages.
+const social=document.querySelector('.social');if(social){social.innerHTML='<a class="social-item social-mail" href="#" aria-label="Contactez-nous"><span class="social-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg></span><span class="social-label">Contactez-nous</span></a><a class="social-item social-facebook" href="https://www.facebook.com/groups/5336206996506252/" target="_blank" rel="noopener noreferrer"><span class="social-icon"><svg viewBox="0 0 24 24"><path d="M13.7 22v-9h3l.45-3.5H13.7V7.25c0-1.01.28-1.7 1.74-1.7h1.86V2.42c-.32-.04-1.43-.14-2.72-.14-2.69 0-4.53 1.64-4.53 4.66V9.5H7v3.5h3.05v9h3.65z"/></svg></span><span class="social-label">Rejoignez-nous</span></a>';}
+// Le footer partage le même formulaire et le même lien de contact sur toutes les pages.
 (()=>{
+ const script=document.currentScript;
+ const siteRoot=new URL('../../',script.src);
+ const contact=document.querySelector('.social-mail');
+ if(contact)contact.href=new URL('contact/',siteRoot).href;
  const footer=document.querySelector('footer');
  if(!footer)return;
  let newsletter=footer.querySelector('.newsletter-footer');
