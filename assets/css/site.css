@@ -53,3 +53,22 @@ footer :is(.newsletter-form input,.newsletter-form button,.social-mail):focus-vi
 .retrospective-link-button:hover{background:#1f4f31;transform:translateY(-1px)}
 .retrospective-link-button span{font-size:18px;font-weight:400}
 @media(max-width:680px){.retrospective-link-bar{width:calc(100% - 40px);margin-bottom:46px;display:block;padding:21px 0}.retrospective-link-bar p{font-size:16px}.retrospective-link-button{width:100%;margin-top:17px}}
+
+/* Header uniforme : menu tactile sur téléphone et tablette portrait */
+.search-icon{display:none!important}
+@media(max-width:1100px){
+ .site-header{height:80px!important;padding:0 14px!important;display:flex!important;align-items:center!important;gap:8px!important;position:relative!important;z-index:1000!important;background:#fbfaf6!important}
+ .site-header .brand{order:1!important;display:flex!important;align-items:center!important;flex:1 1 auto!important;min-width:0!important;gap:8px!important}
+ .site-header .brand-logo{width:50px!important;height:60px!important;flex:0 0 50px!important;object-fit:contain!important}
+ .site-header .brand-name{font-size:10px!important;line-height:1.25!important;white-space:nowrap!important}
+ .site-header .header-right{order:2!important;display:flex!important;align-items:center!important;gap:0!important;margin-left:auto!important;flex:0 0 auto!important}
+ .site-header .join{display:flex!important;align-items:center!important;justify-content:center!important;padding:11px 14px!important;font-size:12px!important;white-space:nowrap!important}
+ .site-header .join b{display:none!important}
+ .site-header .menu-toggle{order:3!important;display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 38px!important;width:38px!important;height:42px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;color:#111!important;font-size:0!important;position:static!important;transform:none!important;box-shadow:none!important;cursor:pointer!important}
+ .site-header .menu-toggle:after{content:'☰'!important;font-family:Arial,sans-serif!important;font-size:25px!important;font-weight:700!important;line-height:1!important;color:#111!important}
+ .site-header .main-nav{display:none!important;position:absolute!important;top:100%!important;left:0!important;right:0!important;width:100%!important;height:auto!important;margin:0!important;padding:7px 16px 12px!important;background:#fbfaf6!important;box-shadow:0 12px 22px rgba(0,0,0,.14)!important;z-index:9999!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;white-space:normal!important}
+ .site-header .main-nav.open{display:flex!important}
+ .site-header .main-nav a{display:flex!important;align-items:center!important;width:100%!important;height:43px!important;min-height:43px!important;margin:0!important;padding:0 4px!important;border:0!important;border-bottom:1px solid #e2e5df!important;font-size:13px!important;color:#13251c!important}
+ .site-header .main-nav a:last-child{border-bottom:0!important}
+ .site-header .main-nav a.active{color:#315f36!important;font-weight:600!important}
+}
