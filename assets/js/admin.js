@@ -1,10 +1,65 @@
-const API=window.HORTICULTURE_ADMIN_API||'';const $=s=>document.querySelector(s);
-const login=$('#login'),app=$('#adminApp'),ls=$('#loginStatus');
-const request=async(path,options={})=>{if(!API)throw new Error("Le service d’administration sécurisé n’est pas encore relié.");const r=await fetch(API+path,{credentials:'include',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});if(!r.ok)throw new Error((await r.text())||'Erreur');return r.status===204?null:r.json()};
+const API=String(window.HORTICULTURE_ADMIN_API||'').replace(/\/$/,'');
+const $=selector=>document.querySelector(selector);
+const login=$('#login'),app=$('#adminApp'),loginStatus=$('#loginStatus');
+const sessionKey='horticulture_admin_session',userKey='horticulture_admin_user';
+const token=()=>sessionStorage.getItem(sessionKey)||'';
+const request=async(path,options={})=>{
+ if(!API)throw new Error("Le service d’administration sécurisé n’est pas encore relié.");
+ const headers={'Content-Type':'application/json',...(options.headers||{})};
+ if(token())headers.Authorization='Bearer '+token();
+ const response=await fetch(API+path,{credentials:'include',...options,headers});
+ const data=response.status===204?null:await response.json().catch(()=>null);
+ if(!response.ok)throw new Error(data?.error||'Erreur du service d’administration.');
+ return data;
+};
+const permissions=user=>Array.isArray(user?.permissions)?user.permissions:[];
+const can=(user,permission)=>permissions(user).includes('*')||permissions(user).includes(permission);
+function applyRights(user){
+ sessionStorage.setItem(userKey,JSON.stringify(user||{}));
+ const membership=$('#saveMembership')?.closest('.admin-card');
+ const membershipWrite=can(user,'settings.write');
+ membership?.querySelectorAll('input,button').forEach(element=>element.disabled=!membershipWrite);
+ if(membership&&!membershipWrite)membership.insertAdjacentHTML('beforeend','<p class="status">Consultation uniquement : votre compte ne peut pas modifier l’adhésion.</p>');
+ const layout=$('#saveLayout')?.closest('.admin-card');
+ const layoutWrite=can(user,'articles.layout');
+ layout?.querySelectorAll('input,button').forEach(element=>element.disabled=!layoutWrite);
+ if(layout&&!layoutWrite)layout.insertAdjacentHTML('beforeend','<p class="status">Votre compte ne peut pas modifier les dispositions.</p>');
+}
+function showApp(user){login.hidden=true;app.hidden=false;loginStatus.textContent='';applyRights(user)}
+function showLogin(message=''){app.hidden=true;login.hidden=false;loginStatus.textContent=message}
 for(let i=1;i<=28;i++){const n=String(i).padStart(2,'0');$('#layouts').insertAdjacentHTML('beforeend',`<label><input type="radio" name="layout" value="H${n}">H${n}</label>`)}
-$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();ls.textContent='Connexion…';try{await request('/login',{method:'POST',body:JSON.stringify({username:$('#adminUser').value,password:$('#adminPass').value})});login.hidden=true;app.hidden=false;ls.textContent='';await loadSettings()}catch(err){ls.textContent=err.message}});
-async function loadSettings(){const s=await request('/settings');$('#membershipYear').value=s.membershipYear||new Date().getFullYear();$('#membershipPrice').value=s.membershipPrice??20;$('#membershipUrl').value=s.membershipUrl||'';$('#membershipButtonLabel').value=s.membershipButtonLabel||'Adhérer en ligne'}
-$('#saveMembership').onclick=async()=>{const st=$('#membershipStatus');st.textContent='Enregistrement…';try{await request('/settings/membership',{method:'PUT',body:JSON.stringify({membershipYear:+$('#membershipYear').value,membershipPrice:+$('#membershipPrice').value,membershipUrl:$('#membershipUrl').value.trim(),membershipButtonLabel:$('#membershipButtonLabel').value.trim()})});st.textContent='Enregistré.'}catch(e){st.textContent=e.message}};
+$('#loginForm').addEventListener('submit',async event=>{
+ event.preventDefault();loginStatus.textContent='Connexion…';
+ try{
+  const data=await request('/login',{method:'POST',body:JSON.stringify({username:$('#adminUser').value.trim(),password:$('#adminPass').value,scope:'site-admin'})});
+  if(data.sessionToken)sessionStorage.setItem(sessionKey,data.sessionToken);
+  $('#adminPass').value='';showApp(data.user);await loadSettings();
+ }catch(error){loginStatus.textContent=error.message}
+});
+async function loadSettings(){
+ const settings=await request('/settings');
+ $('#membershipYear').value=settings.membershipYear||new Date().getFullYear();
+ $('#membershipPrice').value=settings.membershipPrice??20;
+ $('#membershipUrl').value=settings.membershipUrl||'';
+ $('#membershipButtonLabel').value=settings.membershipButtonLabel||'Adhérer en ligne';
+}
+$('#saveMembership').onclick=async()=>{
+ const status=$('#membershipStatus');status.textContent='Enregistrement…';
+ try{await request('/settings/membership',{method:'PUT',body:JSON.stringify({membershipYear:+$('#membershipYear').value,membershipPrice:+$('#membershipPrice').value,membershipUrl:$('#membershipUrl').value.trim(),membershipButtonLabel:$('#membershipButtonLabel').value.trim()})});status.textContent='Enregistré.'}
+ catch(error){status.textContent=error.message}
+};
 $('#removeMembership').onclick=async()=>{if(!confirm('Supprimer le lien d’adhésion en ligne ?'))return;$('#membershipUrl').value='';$('#saveMembership').click()};
-$('#saveLayout').onclick=async()=>{const st=$('#layoutStatus'),layout=document.querySelector('input[name=layout]:checked')?.value,id=$('#articleId').value.trim().toUpperCase();if(!/^A\d{7,}$/.test(id)||!layout){st.textContent='Indiquez une actualité et une disposition.';return}st.textContent='Enregistrement…';try{await request('/articles/'+encodeURIComponent(id)+'/layout',{method:'PUT',body:JSON.stringify({layout})});st.textContent='Disposition enregistrée.'}catch(e){st.textContent=e.message}};
-$('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}location.reload()};
+$('#saveLayout').onclick=async()=>{
+ const status=$('#layoutStatus'),layout=document.querySelector('input[name=layout]:checked')?.value,id=$('#articleId').value.trim().toUpperCase();
+ if(!/^A\d{7,}(?:[A-Z]{3})?$/.test(id)||!layout){status.textContent='Indiquez une actualité et une disposition.';return}
+ status.textContent='Enregistrement…';
+ try{await request('/articles/'+encodeURIComponent(id)+'/layout',{method:'PUT',body:JSON.stringify({layout})});status.textContent='Disposition enregistrée.'}
+ catch(error){status.textContent=error.message}
+};
+$('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);location.reload()};
+(async()=>{
+ if(!API){showLogin("Le backend sécurisé doit encore être déployé et relié.");return}
+ if(!token()){showLogin();return}
+ try{const data=await request('/session');showApp(data.user);await loadSettings()}
+ catch(error){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);showLogin('Votre session a expiré. Reconnectez-vous.')}
+})();
