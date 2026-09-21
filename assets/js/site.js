@@ -16,7 +16,7 @@
  nav.addEventListener('click',e=>{if(e.target.closest('a'))setOpen(false)});
  document.addEventListener('click',e=>{if(!header.contains(e.target))setOpen(false)});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){setOpen(false);button.focus()}});
- window.matchMedia('(max-width:900px)').addEventListener('change',()=>setOpen(false));
+ window.matchMedia('(max-width:1100px)').addEventListener('change',()=>setOpen(false));
 })();
 document.querySelectorAll('[data-optional-section]').forEach(section=>{const container=section.querySelector('.optional-items');if(!container)return;const items=[...container.children].filter(item=>!item.hidden&&item.getAttribute('aria-hidden')!=='true');if(items.length===0)section.hidden=true;});
 const mobileDetails=document.createElement('style');mobileDetails.textContent=`.mobile-location,.mobile-calendar-icon{display:none}.social{display:flex!important;align-items:flex-start!important;justify-content:center!important;gap:28px!important}.social-item{display:flex!important;flex-direction:column!important;align-items:center!important;gap:7px!important;color:#fff!important;text-decoration:none!important;min-width:78px!important}.social-icon{height:30px!important;display:flex!important;align-items:center!important;justify-content:center!important}.social-item svg{display:block!important;width:27px!important;height:27px!important}.social-facebook svg{fill:#fff!important}.social-mail svg{fill:none!important;stroke:#fff!important;stroke-width:1.65!important}.social-label{font:500 9px/1.2 var(--sans)!important;letter-spacing:.02em!important;color:#e3ebe5!important;white-space:nowrap!important}.flower-cutout span{display:none!important}.news-preview{position:fixed;z-index:1000;width:430px;padding:12px;background:#fff;border:1px solid #e4e5df;border-radius:0 0 12px 12px;box-shadow:0 15px 35px rgba(18,61,41,.15);display:none;grid-template-columns:1fr 1fr;gap:10px}.news-preview.open{display:grid}.news-preview a{display:block!important;text-decoration:none!important;color:#183e2b!important;background:#f6f4ec!important;border-radius:8px!important;padding:12px!important;line-height:1.25!important}.news-preview small{display:block;color:#718076;font-size:9px;margin-bottom:5px}.news-preview strong{display:block;font:500 14px/1.2 var(--serif)}.news-grid article{cursor:pointer}.actualite-card{cursor:pointer}@media(max-width:900px){html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}body>*{max-width:100vw!important}.social{gap:18px!important;transform:translateY(-3px)!important}.social-item{min-width:70px!important;gap:5px!important}.social-item svg{width:25px!important;height:25px!important}.social-label{font-size:8px!important}.news-preview{display:none!important}}`;document.head.appendChild(mobileDetails);
@@ -160,21 +160,31 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
  };
  const menuToggle=document.querySelector('.menu-toggle');
  if(menuToggle){
-  let touchAdminTimer=null,suppressMenuClick=false;
+  let touchAdminTimer=null,suppressMenuClick=false,startX=0,startY=0;
   const cancelTouchAdmin=()=>{clearTimeout(touchAdminTimer);touchAdminTimer=null};
-  menuToggle.addEventListener('pointerdown',event=>{
-   if(event.pointerType==='mouse')return;
-   cancelTouchAdmin();
+  menuToggle.addEventListener('touchstart',event=>{
+   if(event.touches.length!==1)return;
+   cancelTouchAdmin();suppressMenuClick=false;
+   startX=event.touches[0].clientX;startY=event.touches[0].clientY;
    touchAdminTimer=setTimeout(()=>{
     suppressMenuClick=true;touchAdminTimer=null;
     if(navigator.vibrate)navigator.vibrate(35);
     open();
-   },1700);
-  });
-  ['pointerup','pointercancel','pointerleave'].forEach(name=>menuToggle.addEventListener(name,cancelTouchAdmin));
+   },1500);
+  },{passive:true});
+  menuToggle.addEventListener('touchmove',event=>{
+   if(!touchAdminTimer||!event.touches[0])return;
+   if(Math.abs(event.touches[0].clientX-startX)>12||Math.abs(event.touches[0].clientY-startY)>12)cancelTouchAdmin();
+  },{passive:true});
+  menuToggle.addEventListener('touchend',event=>{
+   cancelTouchAdmin();
+   if(suppressMenuClick){event.preventDefault();event.stopPropagation();setTimeout(()=>suppressMenuClick=false,400)}
+  },{passive:false});
+  menuToggle.addEventListener('touchcancel',cancelTouchAdmin,{passive:true});
+  menuToggle.addEventListener('contextmenu',event=>event.preventDefault());
   menuToggle.addEventListener('click',event=>{
    if(!suppressMenuClick)return;
-   event.preventDefault();event.stopImmediatePropagation();suppressMenuClick=false;
+   event.preventDefault();event.stopImmediatePropagation();
   },true);
  }
  layer.querySelectorAll('[data-admin-close]').forEach(el=>el.addEventListener('click',close));
