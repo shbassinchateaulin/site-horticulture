@@ -14,4 +14,4 @@ GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwim8t9oVshwze
 [[d1_databases]]
 binding = "DB"
 database_name = "horticulture-admin"
-database_id = "REMPLACER_PAR_IDENTIFIANT_D1"
+database_id = "1bf8009e-9964-4df8-8696-0adec68b2a0d"
