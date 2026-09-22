@@ -236,7 +236,7 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   event.preventDefault();status.textContent='';
   if(!api()){status.textContent='Le service sécurisé n’est pas encore relié. La connexion sera activée lors de la mise en place du backend.';return}
   submit.disabled=true;submit.textContent='Connexion…';
-  const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),25000);
+  const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),70000);
   try{
    const response=await fetch(api()+'/login',{method:'POST',signal:controller.signal,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value,scope:'site-admin'})});
    const data=await response.json().catch(()=>({}));
