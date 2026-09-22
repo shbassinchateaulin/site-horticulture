@@ -102,7 +102,7 @@ async function authenticateWithGoogleSheet(env,credentials){
  // Follow ContentService redirects explicitly: the redirected URL serves output
  // via GET and must never receive the password or shared secret again.
  const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),20000);
+ const timer=setTimeout(()=>controller.abort(),60000);
  let response,data;
  try{
   let target=new URL(endpoint);
