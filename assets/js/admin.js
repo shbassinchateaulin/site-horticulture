@@ -7,7 +7,7 @@ const request=async(path,options={})=>{
  if(!API)throw new Error("Le service d’administration sécurisé n’est pas encore relié.");
  const headers={'Content-Type':'application/json',...(options.headers||{})};
  if(token())headers.Authorization='Bearer '+token();
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),70000);
  let response;
  try{response=await fetch(API+path,{credentials:'include',...options,headers,signal:controller.signal})}
  catch(error){throw new Error(controller.signal.aborted?'Le délai de connexion est dépassé. Réessayez.':error.message)}
