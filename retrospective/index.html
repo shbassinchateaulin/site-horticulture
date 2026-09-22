@@ -134,8 +134,7 @@
  try{
   const data=await window.HorticultureContent.index({fresh:true}),map=new Map();
   (data.articles||[]).forEach(a=>{const info=codeInfo(a.seasonCode)||dateInfo(articleDate(a));if(!info)return;if(!map.has(info.key))map.set(info.key,{...info,articles:[]});map.get(info.key).articles.push(a)});
-  const groups=[...map.values()].sort((a,b)=>b.start-a.start);groups.forEach(g=>g.articles.sort((a,b)=>String(articleDate(b)).localeCompare(String(articleDate(a)))));
-  render(groups);
+  const groups=[...map.values()].sort((a,b)=>b.start-a.start);groups.forEach(g=>g.articles.sort((a,b)=>String(articleDate(b)).localeCompare(String(articleDate(a)))));const requested=new URLSearchParams(location.search).get('season');render(requested?groups.filter(g=>g.key===requested||g.label.includes(requested)):groups);
  }catch(error){console.error(error);loading.hidden=true;empty.hidden=false;empty.querySelector('p').textContent='Les souvenirs sont momentanément indisponibles. Merci de réessayer plus tard.'}
 })();
 </script>
