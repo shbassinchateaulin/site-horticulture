@@ -71,9 +71,10 @@ $('#saveLayout').onclick=async()=>{
 $('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);location.href='../'};
 (async()=>{
  if(!API){showLogin("Le backend sécurisé doit encore être déployé et relié.");return}
- if(!token()){showLogin();return}
+ // Le cookie HttpOnly permet d’ouvrir directement cette URL sans ressaisir le code.
+ // Le jeton sessionStorage reste utilisé quand il existe, mais n’est plus obligatoire.
  try{const data=await request('/session');showApp(data.user);await loadSettingsSafely()}
- catch(error){if(error.status===401){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey)}showLogin(error.status===401?'Votre session a expiré. Reconnectez-vous.':error.message)}
+ catch(error){if(error.status===401){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);showLogin()}else showLogin(error.message)}
 })();
 
 // Éditeur visuel contrôlé : les données sensibles restent enregistrées par le backend.
