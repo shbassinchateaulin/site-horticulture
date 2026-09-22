@@ -62,12 +62,20 @@ async function login(request,env){
  await recordAttempt(env,clientKey,username,valid);
  if(!valid)return json({error:'Identifiant ou mot de passe incorrect.'},401,request,env);
  const sheetUser=sheetResult.user||{},role=normalizeRole(sheetUser.role),permissions=normalizePermissions(sheetUser.permissions,role);
- if(String(body.scope||'')==='site-admin'&&!permissions.includes('*')&&!permissions.includes('admin.access'))return json({error:'Ce compte ne possède pas les droits d’accès à l’administration du site.'},403,request,env);
- const now=new Date().toISOString();
- await env.DB.prepare(`INSERT INTO users (external_id,username,display_name,email,password_hash,password_salt,password_iterations,role,permissions,active,created_at)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?)
-  ON CONFLICT(username) DO UPDATE SET external_id=excluded.external_id,display_name=excluded.display_name,email=excluded.email,role=excluded.role,permissions=excluded.permissions,active=excluded.active`)
-  .bind(String(sheetUser.id||''),username,String(sheetUser.displayName||'').slice(0,160),String(sheetUser.email||'').slice(0,254),'','',0,role,JSON.stringify(permissions),1,now).run();
+ if(!permissions.includes('*')&&!permissions.includes('admin.access'))return json({error:'Ce compte ne possède pas les droits d’accès à l’administration du site.'},403,request,env);
+ const now=new Date().toISOString(),externalId=String(sheetUser.id);
+ // Google Sheets is authoritative. Revoke stale sessions on a rename or on
+ // reassignment of an old username, then refresh the local session profile.
+ await env.DB.batch([
+  env.DB.prepare(`DELETE FROM sessions WHERE user_id IN (
+   SELECT id FROM users WHERE (external_id = ? AND username <> ?)
+    OR (username = ? AND external_id <> ?))`).bind(externalId,username,username,externalId),
+  env.DB.prepare('DELETE FROM users WHERE external_id = ? AND username <> ?').bind(externalId,username),
+  env.DB.prepare(`INSERT INTO users (external_id,username,display_name,email,password_hash,password_salt,password_iterations,role,permissions,active,created_at)
+   VALUES (?,?,?,?,?,?,?,?,?,?,?)
+   ON CONFLICT(username) DO UPDATE SET external_id=excluded.external_id,display_name=excluded.display_name,email=excluded.email,role=excluded.role,permissions=excluded.permissions,active=excluded.active`)
+   .bind(externalId,username,String(sheetUser.displayName||'').slice(0,160),String(sheetUser.email||'').slice(0,254),'','',0,role,JSON.stringify(permissions),1,now)
+ ]);
  const user=await env.DB.prepare('SELECT id,username,role,permissions,active FROM users WHERE username = ?').bind(username).first();
  await env.DB.prepare('DELETE FROM login_attempts WHERE client_key = ?').bind(clientKey).run();
  const token=randomToken(32),tokenHash=await sha256(token),expiresAt=new Date(Date.now()+SESSION_HOURS*3600000).toISOString();
@@ -128,14 +136,14 @@ async function authenticateWithGoogleSheet(env,credentials){
  }
  // Never treat an unrelated Apps Script {ok:true} response as a successful login.
  if(!data.user||typeof data.user!=='object'||Array.isArray(data.user)||
-    !data.user.username||!data.user.role){
+    !String(data.user.id||'').trim()||!data.user.username||!data.user.role){
   console.warn('Unexpected account response from Apps Script',{
    hasUser:!!data.user,hasUsers:Array.isArray(data.users),
-   finalHost:new URL(response.url).hostname
+   finalHost:response.url?new URL(response.url).hostname:'unknown'
   });
   throw Object.assign(new Error('Réponse d’authentification incomplète. Vérifiez le déploiement Apps Script.'),{status:502});
  }
- if(String(data.user.username).trim().toLowerCase()!==credentials.username||data.user.active===false)throw accountError('COMPTE_INCOHERENT');
+ if(String(data.user.username).trim().toLowerCase()!==credentials.username||[false,0,'false','FALSE','0'].includes(data.user.active))throw accountError('COMPTE_INCOHERENT');
  return{authenticated:true,user:data.user};
 }
 
@@ -206,15 +214,29 @@ function parseCookies(value){return Object.fromEntries(value.split(';').map(v=>v
 function sessionCookie(token){return'sh_admin_session='+encodeURIComponent(token)+'; Path=/; Max-Age='+(SESSION_HOURS*3600)+'; HttpOnly; Secure; SameSite=None'}
 function expiredCookie(){return'sh_admin_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None'}
 function permissionsFor(role){return ROLE_PERMISSIONS[String(role||'member')]||[]}
+function permissionKey(value){return String(value||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s-]+/g,'_')}
 function normalizeRole(value){
- const role=String(value||'member').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s-]+/g,'_');
- if(role.includes('super')&&role.includes('admin'))return'super_admin';
- if(role==='admin'||role.includes('administrateur'))return'admin';
- if(role.includes('publisher')||role.includes('publieur')||role.includes('publication'))return'publisher';
+ const role=permissionKey(value);
+ if(['super_admin','superadmin','super_administrateur'].includes(role))return'super_admin';
+ if(['admin','administrateur','administrator'].includes(role))return'admin';
+ if(['publisher','publieur','publication','editeur'].includes(role))return'publisher';
  return'member';
 }
-function parsePermissions(value){try{return Array.isArray(value)?value:JSON.parse(String(value||'[]'))}catch{return[]}}
-function normalizePermissions(value,role){const supplied=parsePermissions(value).map(String).filter(Boolean);return[...new Set([...permissionsFor(role),...supplied])]}
+function parsePermissions(value){
+ if(Array.isArray(value))return value.filter(v=>typeof v==='string');
+ if(typeof value!=='string')return[];
+ try{const parsed=JSON.parse(value);return Array.isArray(parsed)?parsed.filter(v=>typeof v==='string'):[]}
+ catch{return value.split(',').map(v=>v.trim()).filter(Boolean)}
+}
+function normalizePermissions(value,role){
+ const supplied=parsePermissions(value).map(permissionKey).filter(Boolean);
+ const permissions=new Set([...permissionsFor(role),...supplied]);
+ // Explicit publication permissions allow the editor, never account management.
+ if(supplied.some(p=>['publier','publication','publisher','content.write','articles.layout'].includes(p))){
+  permissionsFor('publisher').forEach(p=>permissions.add(p));
+ }
+ return[...permissions];
+}
 function hasPermission(session,permission){return session.permissions.includes('*')||session.permissions.includes(permission)}
 function forbidden(request,env){return json({error:'Droits insuffisants pour cette opération.'},403,request,env)}
 function allowedOrigins(env){return new Set(String(env.ALLOWED_ORIGINS||'https://shbassinchateaulin.github.io').split(',').map(x=>x.trim()).filter(Boolean))}
