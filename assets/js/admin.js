@@ -7,7 +7,7 @@ const request=async(path,options={})=>{
  if(!API)throw new Error("Le service d’administration sécurisé n’est pas encore relié.");
  const headers={'Content-Type':'application/json',...(options.headers||{})};
  if(token())headers.Authorization='Bearer '+token();
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),70000);
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
  let response;
  try{response=await fetch(API+path,{credentials:'include',...options,headers,signal:controller.signal})}
  catch(error){throw new Error(controller.signal.aborted?'Le délai de connexion est dépassé. Réessayez.':error.message)}
@@ -75,3 +75,17 @@ $('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catc
  try{const data=await request('/session');showApp(data.user);await loadSettingsSafely()}
  catch(error){if(error.status===401){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey)}showLogin(error.status===401?'Votre session a expiré. Reconnectez-vous.':error.message)}
 })();
+
+// Éditeur visuel contrôlé : les données sensibles restent enregistrées par le backend.
+let selectedArticle='A0000003';
+const modelSelect=$('#modelSelect'),modelPreview=$('#modelPreview'),articleEditor=$('#articleEditor'),membershipEditor=$('#membershipEditor');
+for(let i=1;i<=28;i++){const id='H'+String(i).padStart(2,'0');modelSelect?.insertAdjacentHTML('beforeend',`<option value="${id}">${id}${id==='H28'?' — sans photo':''}</option>`);modelPreview?.insertAdjacentHTML('beforeend',`<div class="model" data-model="${id}"><div class="model-shape"></div>${id}</div>`)}
+function markDirty(){if($('#editorState'))$('#editorState').textContent='Modifications non enregistrées'}
+function selectArticle(id){selectedArticle=id;articleEditor.hidden=false;membershipEditor.hidden=true;$('#inspectorTitle').textContent='Mise en page de l’actualité';$('#breadcrumb').textContent='Pages › Actualités › '+id;$('#editorTitle').value=id==='A0000003'?'Les jardins de Châteaulin':'';$('#editorText').value=id==='A0000003'?'Depuis plus de 40 ans, notre association réunit des passionnés de jardinage, d’art floral et de nature. À Châteaulin et dans tout le bassin, nous partageons nos connaissances, organisons des sorties, des ateliers et des moments de rencontre.':'';$('#previewTitle').textContent=$('#editorTitle').value;$('#previewBlockTitle').textContent=$('#editorTitle').value;$('#previewText').textContent=$('#editorText').value;modelSelect.value='H03';document.querySelectorAll('.model').forEach(x=>x.classList.toggle('active',x.dataset.model==='H03'));markDirty()}
+function selectPage(page){articleEditor.hidden=true;membershipEditor.hidden=page!=='membership';$('#inspectorTitle').textContent=page==='membership'?'Modifier l’adhésion':'Modifier la page';$('#breadcrumb').textContent='Pages › '+page.charAt(0).toUpperCase()+page.slice(1);document.querySelectorAll('.tree-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));markDirty()}
+document.querySelectorAll('[data-article]').forEach(el=>el.addEventListener('click',()=>{document.querySelectorAll('.tree-item').forEach(x=>x.classList.remove('active'));el.classList.add('active');selectArticle(el.dataset.article)}));
+document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click',()=>selectPage(el.dataset.page)));
+modelPreview?.addEventListener('click',e=>{const item=e.target.closest('[data-model]');if(!item)return;modelSelect.value=item.dataset.model;document.querySelectorAll('.model').forEach(x=>x.classList.toggle('active',x===item));markDirty()});modelSelect?.addEventListener('change',()=>{document.querySelectorAll('.model').forEach(x=>x.classList.toggle('active',x.dataset.model===modelSelect.value));markDirty()});
+$('#editorTitle')?.addEventListener('input',()=>{$('#previewTitle').textContent=$('#editorTitle').value;$('#previewBlockTitle').textContent=$('#editorTitle').value;markDirty()});$('#editorText')?.addEventListener('input',()=>{$('#previewText').textContent=$('#editorText').value;markDirty()});
+$('#saveAll')?.addEventListener('click',async()=>{const status=$('#layoutStatus');if(!selectedArticle){status.textContent='Sélectionnez une actualité.';return}status.textContent='Enregistrement…';try{await request('/articles/'+encodeURIComponent(selectedArticle)+'/layout',{method:'PUT',body:JSON.stringify({layout:modelSelect.value})});status.textContent='Modifications enregistrées.';$('#editorState').textContent='Toutes les modifications sont enregistrées'}catch(error){status.textContent=error.message}});
+selectArticle(selectedArticle);
