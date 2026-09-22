@@ -61,7 +61,7 @@ async function login(request,env){
  const valid=!!sheetResult?.authenticated;
  await recordAttempt(env,clientKey,username,valid);
  if(!valid)return json({error:'Identifiant ou mot de passe incorrect.'},401,request,env);
- const sheetUser=sheetResult.user||{},role=normalizeRole([sheetUser.role,sheetUser.function,sheetUser.username].join(' ')),permissions=normalizePermissions(sheetUser.permissions,role);
+ const sheetUser=sheetResult.user||{},role=normalizeRole(sheetUser.role),permissions=normalizePermissions(sheetUser.permissions,role);
  if(String(body.scope||'')==='site-admin'&&!permissions.includes('*')&&!permissions.includes('admin.access'))return json({error:'Ce compte ne possède pas les droits d’accès à l’administration du site.'},403,request,env);
  const now=new Date().toISOString();
  await env.DB.prepare(`INSERT INTO users (external_id,username,display_name,email,password_hash,password_salt,password_iterations,role,permissions,active,created_at)
@@ -91,13 +91,41 @@ async function authenticateWithGoogleSheet(env,credentials){
  const endpoint=String(env.GOOGLE_APPS_SCRIPT_URL||'').trim();
  const secret=String(env.GOOGLE_APPS_SCRIPT_SHARED_SECRET||'');
  if(!endpoint||!secret)throw Object.assign(new Error('Le service Google Sheets n’est pas configuré.'),{status:503});
- const response=await fetch(endpoint,{
-  method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=UTF-8'},
-  body:JSON.stringify({action:'backendAuthenticate',backendSecret:secret,...credentials})
- });
- if(!response.ok)throw Object.assign(new Error('Le service des comptes est indisponible.'),{status:502});
- let data;try{data=await response.json()}catch{throw Object.assign(new Error('Réponse invalide du service des comptes.'),{status:502})}
- if(!data?.ok)return{authenticated:false};
+ // Follow ContentService redirects explicitly: the redirected URL serves output
+ // via GET and must never receive the password or shared secret again.
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),20000);
+ let response,data;
+ try{
+  let target=new URL(endpoint);
+  if(target.protocol!=='https:'||target.hostname!=='script.google.com')throw accountError('CONFIGURATION',503);
+  let options={method:'POST',redirect:'manual',signal:controller.signal,
+   headers:{'Content-Type':'text/plain;charset=UTF-8'},
+   body:JSON.stringify({action:'backendAuthenticate',backendSecret:secret,...credentials})};
+  for(let hop=0;hop<5;hop++){
+   response=await fetch(target.href,options);
+   if(![301,302,303,307,308].includes(response.status))break;
+   const location=response.headers.get('Location');
+   if(!location)throw accountError('REDIRECTION_INVALIDE');
+   const next=new URL(location,target);
+   if(next.hostname==='accounts.google.com')throw accountError('ACCES_GOOGLE');
+   if(next.protocol!=='https:'||next.hostname!=='script.googleusercontent.com')throw accountError('REDIRECTION_INATTENDUE');
+   // Only the one-time ContentService output endpoint is accepted.
+   if(!next.pathname.startsWith('/macros/echo'))throw accountError('REDIRECTION_INATTENDUE');
+   target=next;
+   options={method:'GET',redirect:'manual',signal:controller.signal};
+  }
+  if(!response.ok)throw accountError('GOOGLE_HTTP_'+response.status);
+  try{data=await response.json()}catch{throw accountError('REPONSE_NON_JSON')}
+ }catch(error){
+  if(error.status)throw error;
+  throw accountError(controller.signal.aborted?'DELAI_GOOGLE':'RESEAU_GOOGLE');
+ }finally{clearTimeout(timer)}
+ if(data?.ok!==true){
+  if(data?.error==='Requête non autorisée.')throw accountError('SECRET_PARTAGE');
+  if(data?.error==='Identifiant ou mot de passe incorrect.')return{authenticated:false};
+  throw accountError('REPONSE_AUTHENTIFICATION');
+ }
  // Never treat an unrelated Apps Script {ok:true} response as a successful login.
  if(!data.user||typeof data.user!=='object'||Array.isArray(data.user)||
     !data.user.username||!data.user.role){
@@ -107,7 +135,13 @@ async function authenticateWithGoogleSheet(env,credentials){
   });
   throw Object.assign(new Error('Réponse d’authentification incomplète. Vérifiez le déploiement Apps Script.'),{status:502});
  }
+ if(String(data.user.username).trim().toLowerCase()!==credentials.username||data.user.active===false)throw accountError('COMPTE_INCOHERENT');
  return{authenticated:true,user:data.user};
+}
+
+function accountError(code,status=502){
+ console.error('Account service failure',{code});
+ return Object.assign(new Error('Connexion au service des comptes impossible ('+code+').'),{status});
 }
 
 async function saveMembership(request,env){

@@ -7,9 +7,13 @@ const request=async(path,options={})=>{
  if(!API)throw new Error("Le service d’administration sécurisé n’est pas encore relié.");
  const headers={'Content-Type':'application/json',...(options.headers||{})};
  if(token())headers.Authorization='Bearer '+token();
- const response=await fetch(API+path,{credentials:'include',...options,headers});
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
+ let response;
+ try{response=await fetch(API+path,{credentials:'include',...options,headers,signal:controller.signal})}
+ catch(error){throw new Error(controller.signal.aborted?'Le délai de connexion est dépassé. Réessayez.':error.message)}
+ finally{clearTimeout(timer)}
  const data=response.status===204?null:await response.json().catch(()=>null);
- if(!response.ok)throw new Error(data?.error||'Erreur du service d’administration.');
+ if(!response.ok)throw Object.assign(new Error(data?.error||'Erreur du service d’administration.'),{status:response.status});
  return data;
 };
 const permissions=user=>Array.isArray(user?.permissions)?user.permissions:[];
@@ -33,9 +37,17 @@ $('#loginForm').addEventListener('submit',async event=>{
  try{
   const data=await request('/login',{method:'POST',body:JSON.stringify({username:$('#adminUser').value.trim(),password:$('#adminPass').value,scope:'site-admin'})});
   if(data.sessionToken)sessionStorage.setItem(sessionKey,data.sessionToken);
-  $('#adminPass').value='';showApp(data.user);await loadSettings();
+  $('#adminPass').value='';showApp(data.user);await loadSettingsSafely();
  }catch(error){loginStatus.textContent=error.message}
 });
+async function loadSettingsSafely(){
+ try{await loadSettings()}
+ catch(error){
+  $('#membershipStatus').textContent='Connexion réussie. Les réglages ne peuvent pas être chargés : '+error.message;
+  $('#saveMembership').disabled=true;
+  $('#removeMembership').disabled=true;
+ }
+}
 async function loadSettings(){
  const settings=await request('/settings');
  $('#membershipYear').value=settings.membershipYear||new Date().getFullYear();
@@ -60,6 +72,6 @@ $('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catc
 (async()=>{
  if(!API){showLogin("Le backend sécurisé doit encore être déployé et relié.");return}
  if(!token()){showLogin();return}
- try{const data=await request('/session');showApp(data.user);await loadSettings()}
- catch(error){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);showLogin('Votre session a expiré. Reconnectez-vous.')}
+ try{const data=await request('/session');showApp(data.user);await loadSettingsSafely()}
+ catch(error){if(error.status===401){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey)}showLogin(error.status===401?'Votre session a expiré. Reconnectez-vous.':error.message)}
 })();

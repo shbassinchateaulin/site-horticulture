@@ -236,14 +236,15 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   event.preventDefault();status.textContent='';
   if(!api()){status.textContent='Le service sécurisé n’est pas encore relié. La connexion sera activée lors de la mise en place du backend.';return}
   submit.disabled=true;submit.textContent='Connexion…';
+  const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),25000);
   try{
-   const response=await fetch(api()+'/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value,scope:'site-admin'})});
+   const response=await fetch(api()+'/login',{method:'POST',signal:controller.signal,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value,scope:'site-admin'})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.error||(response.status===401?'Identifiant ou mot de passe incorrect.':'Connexion momentanément indisponible.'));
    if(data.sessionToken)sessionStorage.setItem('horticulture_admin_session',data.sessionToken);
    if(data.user)sessionStorage.setItem('horticulture_admin_user',JSON.stringify(data.user));
    pass.value='';location.assign(adminURL);
-  }catch(error){status.textContent=error.message||'Connexion impossible.'}
-  finally{submit.disabled=false;submit.textContent='Connexion'}
+  }catch(error){status.textContent=controller.signal.aborted?'Le délai de connexion est dépassé. Réessayez.':error.message||'Connexion impossible.'}
+  finally{clearTimeout(deadline);submit.disabled=false;submit.textContent='Connexion'}
  });
 })();
