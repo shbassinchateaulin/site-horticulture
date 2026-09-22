@@ -181,6 +181,7 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   lastFocus=document.activeElement;layer.hidden=false;document.body.classList.add('admin-access-open');status.textContent='';
   requestAnimationFrame(()=>user.focus());
  };
+ if(new URLSearchParams(location.search).get('admin')==='1')setTimeout(open,80);
  const close=()=>{
   layer.hidden=true;document.body.classList.remove('admin-access-open');pass.value='';status.textContent='';
   if(lastFocus&&typeof lastFocus.focus==='function')lastFocus.focus();
@@ -236,7 +237,7 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   event.preventDefault();status.textContent='';
   if(!api()){status.textContent='Le service sécurisé n’est pas encore relié. La connexion sera activée lors de la mise en place du backend.';return}
   submit.disabled=true;submit.textContent='Connexion…';
-  const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),70000);
+  const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),25000);
   try{
    const response=await fetch(api()+'/login',{method:'POST',signal:controller.signal,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass.value,scope:'site-admin'})});
    const data=await response.json().catch(()=>({}));
