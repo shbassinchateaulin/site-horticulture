@@ -68,7 +68,7 @@ $('#saveLayout').onclick=async()=>{
  try{await request('/articles/'+encodeURIComponent(id)+'/layout',{method:'PUT',body:JSON.stringify({layout})});status.textContent='Disposition enregistrée.'}
  catch(error){status.textContent=error.message}
 };
-$('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);location.reload()};
+$('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);location.href='../'};
 (async()=>{
  if(!API){showLogin("Le backend sécurisé doit encore être déployé et relié.");return}
  if(!token()){showLogin();return}
@@ -89,3 +89,7 @@ modelPreview?.addEventListener('click',e=>{const item=e.target.closest('[data-mo
 $('#editorTitle')?.addEventListener('input',()=>{$('#previewTitle').textContent=$('#editorTitle').value;$('#previewBlockTitle').textContent=$('#editorTitle').value;markDirty()});$('#editorText')?.addEventListener('input',()=>{$('#previewText').textContent=$('#editorText').value;markDirty()});
 $('#saveAll')?.addEventListener('click',async()=>{const status=$('#layoutStatus');if(!selectedArticle){status.textContent='Sélectionnez une actualité.';return}status.textContent='Enregistrement…';try{await request('/articles/'+encodeURIComponent(selectedArticle)+'/layout',{method:'PUT',body:JSON.stringify({layout:modelSelect.value})});status.textContent='Modifications enregistrées.';$('#editorState').textContent='Toutes les modifications sont enregistrées'}catch(error){status.textContent=error.message}});
 selectArticle(selectedArticle);
+
+function openLivePage(path){const frame=$('#siteFrame');if(frame)frame.src='../'+path}
+document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('dblclick',()=>{const map={home:'',news:'actualites/',calendar:'a-venir/',outings:'sorties/',association:'association/',membership:'adhesion/',contact:'contact/',suggestions:'suggestions/',retro:'retrospective/'};if(map[el.dataset.page]!==undefined)openLivePage(map[el.dataset.page])}));
+document.querySelectorAll('[data-article]').forEach(el=>el.addEventListener('dblclick',()=>openLivePage('actualites/article/?id='+encodeURIComponent(el.dataset.article))));
