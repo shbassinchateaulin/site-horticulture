@@ -1,6 +1,6 @@
 [
   {
-    "date": "2026-05-06",
+    "date": "2026-04-01",
     "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
@@ -9,37 +9,19 @@
     "source": "google"
   },
   {
-    "date": "2026-06-17",
+    "date": "2026-10-14",
     "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
     "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-12-16",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
     "past": false,
     "source": "google"
   },
   {
-    "date": "2026-11-18",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
-    "past": false,
-    "source": "google"
-  },
-  {
-    "date": "2025-10-11",
-    "time": "08:00",
-    "title": "Assemblée générale",
-    "location": "Salle des fêtes – Châteaulin",
+    "date": "2026-09-11",
+    "time": "18:00",
+    "title": "Lutter contre les adventices",
+    "location": "Lycée horticole de Châteaulin",
     "description": "",
     "past": true,
     "source": "google"
@@ -54,16 +36,7 @@
     "source": "google"
   },
   {
-    "date": "2026-09-11",
-    "time": "18:00",
-    "title": "Lutter contre les adventices",
-    "location": "Lycée horticole de Châteaulin",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-04-01",
+    "date": "2026-06-17",
     "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
@@ -72,8 +45,44 @@
     "source": "google"
   },
   {
-    "date": "2026-01-21",
+    "date": "2026-11-18",
     "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Mairie",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-04-10",
+    "time": "18:00",
+    "title": "Les orchidées",
+    "location": "Lycée horticole de Châteaulin",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-10-11",
+    "time": "08:00",
+    "title": "Assemblée générale 2026",
+    "location": "Mairie, 15 Quai Jean Moulin, 29150 Châteaulin, France",
+    "description": "Assemblée générale 2026 à la salle des fêtes de la mairie de châteaulin",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-12-16",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Mairie",
+    "description": "",
+    "past": false,
+    "source": "google"
+  },
+  {
+    "date": "2026-05-06",
+    "time": "12:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
     "description": "",
@@ -81,12 +90,12 @@
     "source": "google"
   },
   {
-    "date": "2026-11-14",
-    "time": "13:00",
-    "title": "Bourse aux plantes",
-    "location": "Salle des fêtes – Châteaulin",
+    "date": "2026-02-18",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Mairie",
     "description": "",
-    "past": false,
+    "past": true,
     "source": "google"
   },
   {
@@ -99,10 +108,19 @@
     "source": "google"
   },
   {
-    "date": "2026-02-21",
-    "time": "13:00",
-    "title": "Tailles arbustes & fruitiers",
-    "location": "Landudal – Jardin Hascoet",
+    "date": "2026-06-20",
+    "time": "12:00",
+    "title": "Sortie botanique – plantes ripicoles",
+    "location": "Châteaulin / Dinéault",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-01-24",
+    "time": "14:00",
+    "title": "Conservation des fruits et légumes",
+    "location": "Lycée horticole de Châteaulin",
     "description": "",
     "past": true,
     "source": "google"
@@ -126,12 +144,12 @@
     "source": "google"
   },
   {
-    "date": "2026-04-18",
-    "time": "05:45",
-    "title": "Excursion Côtes-d’Armor",
-    "location": "Départ Lycée horticole",
+    "date": "2026-11-14",
+    "time": "13:00",
+    "title": "Bourse aux plantes",
+    "location": "Salle des fêtes – Châteaulin",
     "description": "",
-    "past": true,
+    "past": false,
     "source": "google"
   },
   {
@@ -139,6 +157,15 @@
     "time": "13:00",
     "title": "Tailles arbustes & fruitiers",
     "location": "Parc communal de St-Coulitz",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-04-18",
+    "time": "05:45",
+    "title": "Excursion Côtes-d’Armor",
+    "location": "Départ Lycée horticole",
     "description": "",
     "past": true,
     "source": "google"
@@ -153,55 +180,10 @@
     "source": "google"
   },
   {
-    "date": "2026-06-20",
-    "time": "12:00",
-    "title": "Sortie botanique – plantes ripicoles",
-    "location": "Châteaulin / Dinéault",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-10-11",
-    "time": "08:00",
-    "title": "Assemblée générale 2026",
-    "location": "Mairie, 15 Quai Jean Moulin, 29150 Châteaulin, France",
-    "description": "Assemblée générale 2026 à la salle des fêtes de la mairie de châteaulin",
-    "past": false,
-    "source": "google"
-  },
-  {
-    "date": "2026-02-18",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Mairie",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-01-24",
-    "time": "14:00",
-    "title": "Conservation des fruits et légumes",
-    "location": "Lycée horticole de Châteaulin",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-03-11",
-    "time": "13:30",
-    "title": "Cours d’art floral",
-    "location": "Foyer",
-    "description": "",
-    "past": true,
-    "source": "google"
-  },
-  {
-    "date": "2026-04-10",
-    "time": "18:00",
-    "title": "Les orchidées",
-    "location": "Lycée horticole de Châteaulin",
+    "date": "2026-02-21",
+    "time": "13:00",
+    "title": "Tailles arbustes & fruitiers",
+    "location": "Landudal – Jardin Hascoet",
     "description": "",
     "past": true,
     "source": "google"
@@ -216,12 +198,30 @@
     "source": "google"
   },
   {
-    "date": "2026-10-14",
-    "time": "12:30",
+    "date": "2026-03-11",
+    "time": "13:30",
+    "title": "Cours d’art floral",
+    "location": "Foyer",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2025-10-11",
+    "time": "08:00",
+    "title": "Assemblée générale",
+    "location": "Salle des fêtes – Châteaulin",
+    "description": "",
+    "past": true,
+    "source": "google"
+  },
+  {
+    "date": "2026-01-21",
+    "time": "13:30",
     "title": "Cours d’art floral",
     "location": "Mairie",
     "description": "",
-    "past": false,
+    "past": true,
     "source": "google"
   }
 ]
