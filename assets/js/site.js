@@ -36,7 +36,7 @@ if(actualitesLink&&window.matchMedia('(min-width:901px)').matches){
  const hide=()=>{timer=setTimeout(()=>preview.classList.remove('open'),160)};
  actualitesLink.addEventListener('mouseenter',show);actualitesLink.addEventListener('mouseleave',hide);
  preview.addEventListener('mouseenter',show);preview.addEventListener('mouseleave',hide);window.addEventListener('resize',place);
- const articleHref=id=>{const p=location.pathname;const base=p.includes('/actualites/article/')?'../':p.includes('/actualites/')?'article/':p==='/'||/\/index\.html$/.test(p)&&!p.replace(/\/index\.html$/,'').replace(/^\//,'')?'actualites/article/':'../actualites/article/';return base+'?id='+encodeURIComponent(id)};
+ const articleHref=id=>{const root=new URL('../../',document.currentScript.src);return new URL('actualites/article/?id='+encodeURIComponent(id),root).href};
  fetch('https://raw.githubusercontent.com/shbassinchateaulin/horticulture-contenus/main/actualites/index.json?_='+Date.now(),{cache:'no-store'})
   .then(r=>{if(!r.ok)throw new Error('index actualités indisponible');return r.json()})
   .then(data=>{
