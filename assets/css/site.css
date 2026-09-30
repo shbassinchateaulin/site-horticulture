@@ -114,3 +114,17 @@ body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
  .newsletter-form{min-width:0!important}
  .legal{margin-top:23px!important;padding-top:15px!important}
 }
+
+*/
+
+/* Pied de page compact sur mobile */
+@media (max-width: 700px){
+  footer{padding:14px 18px 10px!important;border-radius:0 0 28px 28px!important}
+  footer .footer-grid{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+  footer .footer-grid>div:not(.footer-brand){display:none!important}
+  footer .footer-brand{display:flex!important;align-items:center!important;gap:10px!important;grid-template-columns:none!important;min-width:0!important}
+  footer .footer-logo{width:42px!important;height:46px!important}
+  footer .footer-brand h3{font-size:12px!important;line-height:1.2!important;margin:0!important}
+  footer .footer-brand p{font-size:12px!important;line-height:1.25!important;margin:2px 0 0!important}
+  footer .newsletter-footer,footer .legal{display:none!important}
+}
