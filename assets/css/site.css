@@ -143,3 +143,15 @@ body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
 
 /* Compact mobile footer définitif */
 @media (max-width:700px){footer .footer-grid{display:flex!important;align-items:center!important;gap:10px!important}footer .footer-grid>div:not(.footer-brand){display:none!important}footer .footer-brand{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important}footer .footer-logo{width:42px!important;height:46px!important}footer .newsletter-footer,footer .legal{display:none!important}}
+
+/* Footer mobile : bloc marque + slogan, format intermédiaire */
+@media (max-width:700px){
+  footer{padding:34px 28px 42px!important;background:#073b29!important;border-radius:0 0 28px 28px!important}
+  footer .footer-grid{display:block!important}
+  footer .footer-grid>div:not(.footer-brand){display:none!important}
+  footer .footer-brand{display:grid!important;grid-template-columns:64px minmax(0,1.2fr) minmax(92px,.9fr)!important;column-gap:12px!important;align-items:center!important;width:100%!important;min-width:0!important}
+  footer .footer-logo{grid-column:1!important;grid-row:1!important;width:60px!important;height:74px!important;object-fit:contain!important}
+  footer .footer-brand h3{grid-column:2!important;grid-row:1!important;margin:0!important;font-size:15px!important;line-height:1.25!important;color:#fff!important}
+  footer .footer-brand p{grid-column:3!important;grid-row:1!important;margin:0!important;font-size:13px!important;line-height:1.35!important;color:#e1ebe1!important}
+  footer .newsletter-footer,footer .legal{display:none!important}
+}
