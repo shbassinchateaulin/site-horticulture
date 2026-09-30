@@ -174,3 +174,10 @@ body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
  footer .newsletter-form{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important}
  footer .legal{display:block!important}
 }
+
+/* Réaffiche les liens e-mail et Facebook dans le footer mobile */
+@media (max-width:700px){
+ footer .footer-grid>div.social{display:flex!important;grid-column:1/-1!important;justify-content:space-around!important;align-items:center!important;gap:20px!important;margin-top:4px!important}
+ footer .footer-grid>div.social .social-item{display:flex!important;flex-direction:column!important;align-items:center!important}
+ footer .footer-grid>div.social .social-icon{display:flex!important}
+}
