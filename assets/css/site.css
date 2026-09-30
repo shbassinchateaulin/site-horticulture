@@ -108,6 +108,17 @@ body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
   footer .footer-brand h3{font-size:12px!important;line-height:1.2!important;margin:0!important}
   footer .footer-brand p{font-size:12px!important;line-height:1.25!important;margin:2px 0 0!important}
   footer .newsletter-footer,footer .legal{display:none!important}
+
+}
+
+/* Pied de page compact mobile hors bloc tablette */
+@media (max-width:700px){
+ footer .footer-grid>div:not(.footer-brand){display:none!important}
+ footer .footer-grid{display:flex!important;align-items:center!important;gap:10px!important}
+ footer .footer-brand{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important}
+ footer .footer-logo{width:42px!important;height:46px!important}
+ footer .newsletter-footer,footer .legal{display:none!important}
+}
 }
 .newsletter-footer h3{font-size:20px!important;margin:0 0 7px!important}
  .newsletter-footer p{font-size:10px!important;line-height:1.5!important}
