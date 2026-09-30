@@ -155,3 +155,22 @@ body>footer{width:100%;flex:0 0 auto!important;margin-top:auto!important}
   footer .footer-brand p{grid-column:3!important;grid-row:1!important;margin:0!important;font-size:13px!important;line-height:1.35!important;color:#e1ebe1!important}
   footer .newsletter-footer,footer .legal{display:none!important}
 }
+
+/* Footer mobile complet comme la maquette */
+@media (max-width:700px){
+ footer{padding:30px 18px 24px!important;background:#073b29!important;border-radius:0 0 28px 28px!important}
+ footer .footer-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:22px 16px!important;align-items:start!important}
+ footer .footer-grid>div{display:block!important}
+ footer .footer-brand{display:grid!important;grid-template-columns:64px minmax(0,1fr)!important;column-gap:10px!important;align-items:start!important;grid-column:1/-1!important}
+ footer .footer-logo{width:58px!important;height:70px!important;grid-column:1!important;grid-row:1!important}
+ footer .footer-brand h3{grid-column:2!important;grid-row:1!important;margin:4px 0 0!important;font-size:15px!important;line-height:1.25!important;color:#fff!important}
+ footer .footer-brand p{grid-column:1/-1!important;margin:8px 0 0!important;font-size:13px!important;line-height:1.4!important;color:#e1ebe1!important}
+ footer .footer-grid h4{font-size:16px!important;margin:0 0 10px!important}
+ footer .footer-grid a{font-size:13px!important;margin:0 0 7px!important}
+ footer .social{display:flex!important;grid-column:1/-1!important;justify-content:space-around!important;gap:20px!important;margin-top:4px!important}
+ footer .newsletter-footer{display:grid!important;grid-template-columns:1fr!important;gap:14px!important;margin-top:24px!important;padding-top:22px!important}
+ footer .newsletter-footer h3{font-size:22px!important}
+ footer .newsletter-footer p{font-size:13px!important}
+ footer .newsletter-form{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important}
+ footer .legal{display:block!important}
+}
