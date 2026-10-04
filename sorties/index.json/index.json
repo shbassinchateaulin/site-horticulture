@@ -1,0 +1,47 @@
+{
+  "sorties": [
+    {
+      "id": "S00001AAC",
+      "status": "published",
+      "title": "Parenthèse angevine",
+      "type": "Séjour",
+      "startDate": "2027-05-28",
+      "endDate": "2027-05-30",
+      "summary": "Trois jours à Angers entre patrimoine, jardins et découverte botanique : château médiéval, cité historique, Terra Botanica et Jardin des plantes.",
+      "description": "Vendredi 28 mai : départ de Châteaulin, déjeuner à Angers, visite guidée du château médiéval et de la cité historique, puis dîner et nuitée. Samedi 29 mai : journée à Terra Botanica avec accueil personnalisé, visite guidée en petit train privatif, déjeuner sur place et temps libre. Dimanche 30 mai : visite guidée du Jardin des plantes, déjeuner dans le centre-ville, puis retour à Châteaulin vers 18 h 30.",
+      "pricing": {
+        "adherent": {
+          "from30to39": 529,
+          "from40to49": 498,
+          "from50": 479
+        },
+        "nonAdherent": {
+          "from30to39": 539,
+          "from40to49": 508,
+          "from50": 489
+        },
+        "currency": "EUR"
+      },
+      "paymentSchedule": [
+        {
+          "label": "À la réservation — avant la mi-novembre 2026",
+          "amount": 130
+        },
+        {
+          "label": "Vers la mi-janvier 2027",
+          "amount": 130
+        },
+        {
+          "label": "Vers la mi-mars 2027",
+          "amount": 130
+        },
+        {
+          "label": "Solde — à la mi-mai 2027",
+          "amount": "Reste à payer selon le tarif final"
+        }
+      ],
+      "paymentNote": "Les trois premiers versements sont fixés à 130 €. Le solde est ajusté selon le nombre définitif de participants et le tarif adhérent ou non-adhérent.",
+      "registrationLabel": "Bulletin d’inscription"
+    }
+  ]
+}
