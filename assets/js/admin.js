@@ -70,9 +70,9 @@ const legacySaveLayout=$('#saveLayout');if(legacySaveLayout)legacySaveLayout.onc
 };
 $('#logout').onclick=async()=>{try{await request('/logout',{method:'POST'})}catch{}sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);location.href='../'};
 (async()=>{
- // Mode éditeur temporaire : l’authentification sera réactivée après la mise au point visuelle.
- showApp({username:'éditeur',role:'super_admin',permissions:['*']});
- if(token())await loadSettingsSafely();
+ if(!token()){showLogin();return}
+ try{const data=await request('/session');showApp(data.user);await loadSettingsSafely()}
+ catch(error){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(userKey);showLogin('Session expirée. Veuillez vous reconnecter.')}
 })();
 
 // Éditeur visuel contrôlé : les données sensibles restent enregistrées par le backend.
