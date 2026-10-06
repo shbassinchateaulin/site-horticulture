@@ -44,6 +44,22 @@ async function handle(request,env){
   if(!hasPermission(session,'articles.layout'))return forbidden(request,env);
   return saveLayout(request,env,layoutMatch[1].toUpperCase());
  }
+ if(url.pathname==='/content/index'&&request.method==='GET'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  const [articles,sorties]=await Promise.all([
+   githubFile(env,env.CONTENT_REPO,'actualites/index.json'),
+   githubFile(env,env.CONTENT_REPO,'sorties/index.json')
+  ]);
+  return json({actualites:JSON.parse(decodeBase64(articles.content)),sorties:JSON.parse(decodeBase64(sorties.content))},200,request,env);
+ }
+ if(url.pathname==='/content/actualites'&&request.method==='POST'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  return savePublicArticle(request,env);
+ }
+ if(url.pathname==='/content/sorties'&&request.method==='POST'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  return savePublicOuting(request,env);
+ }
  return json({error:'Route introuvable.'},404,request,env);
 }
 
@@ -178,6 +194,97 @@ async function saveLayout(request,env,id){
  return json({ok:true,id,layout},200,request,env);
 }
 
+
+const contentRoot='https://raw.githubusercontent.com/';
+function requiredText(value,label,max=12000){const text=String(value||'').trim();if(!text)throw Object.assign(new Error(label+' obligatoire.'),{status:400});if(text.length>max)throw Object.assign(new Error(label+' trop long.'),{status:400});return text}
+function optionalText(value,max=12000){const text=String(value||'').trim();if(text.length>max)throw Object.assign(new Error('Un champ texte est trop long.'),{status:400});return text}
+function validIsoDate(value,required=false){const date=String(value||'').trim();if(!date&& !required)return'';if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date+'T00:00:00Z')))throw Object.assign(new Error('Date invalide.'),{status:400});return date}
+function safeSeason(index){const code=String(index.seasonSystem?.currentCode||'AAA').toUpperCase();return/^[A-Z]{3}$/.test(code)?code:'AAA'}
+function newArticleId(index){const number=Math.max(Number(index.nextArticleNumber)||1,...(index.articles||[]).map(a=>Number(a.number)||0))+((Number(index.nextArticleNumber)||1)>Math.max(0,...(index.articles||[]).map(a=>Number(a.number)||0))?0:1);return{id:'A'+String(number).padStart(7,'0')+safeSeason(index),number}}
+function newOutingId(index,code){const numbers=(index.sorties||[]).map(x=>Number((String(x.id||'').match(/^S(\d+)/i)||[])[1])||0);return'S'+String(Math.max(0,...numbers)+1).padStart(5,'0')+code}
+function safePhotoPath(path){const value=String(path||'').replace(/^\.\//,'');return/^medias\/[a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)$/i.test(value)&&!value.includes('..')?value:''}
+async function writePublicFile(env,path,content,base64=false){
+ try{
+  const prior=await githubFile(env,env.CONTENT_REPO,path).catch(error=>{if(error.status===404)return null;throw error});
+  const result=base64?await githubPutBase64(env,env.CONTENT_REPO,path,content,prior?.sha||null,'Ajoute un média de publication'):await githubPut(env,env.CONTENT_REPO,path,content,prior?.sha||null,'Met à jour le contenu public');
+  if(!result?.commit?.sha||!result?.content?.sha)throw new Error('Réponse GitHub incomplète');
+  return{path,commitSha:result.commit.sha,blobSha:result.content.sha};
+ }catch(error){console.error('GitHub publication failed',{path,status:error.status||0});throw Object.assign(new Error('Écriture GitHub non confirmée pour '+path+'. La publication n’est pas considérée comme réussie.'),{status:502})}
+}
+function cleanUploads(value){
+ if(!Array.isArray(value))return[];
+ if(value.length>20)throw Object.assign(new Error('20 photos maximum par publication.'),{status:400});
+ return value.map((item,index)=>{
+  if(typeof item==='string'){const src=safePhotoPath(item);if(!src)throw Object.assign(new Error('Chemin photo invalide.'),{status:400});return{src,order:index+1}}
+  if(item&&item.src){const src=safePhotoPath(item.src);if(!src)throw Object.assign(new Error('Chemin photo invalide.'),{status:400});return{src,order:index+1}}
+  const mime=String(item?.mimeType||'image/jpeg').toLowerCase(),data=String(item?.data||'').replace(/^data:[^;]+;base64,/,'');
+  if(!['image/jpeg','image/png','image/webp'].includes(mime)||!/^[A-Za-z0-9+/]+={0,2}$/.test(data)||data.length>7_000_000)throw Object.assign(new Error('Fichier photo invalide ou trop volumineux.'),{status:400});
+  const ext=mime==='image/png'?'png':mime==='image/webp'?'webp':'jpg';
+  return{data,mimeType:mime,ext,order:index+1};
+ });
+}
+async function persistPhotos(env,collection,id,items){
+ const result=[];
+ for(let i=0;i<items.length;i++){
+  const item=items[i];
+  if(item.data){
+   const src='medias/photo-'+String(i+1).padStart(3,'0')+'.'+item.ext,path=collection+'/'+id+'/'+src;
+   await writePublicFile(env,path,item.data,true);
+   result.push({src,order:i+1});
+  }else result.push({src:item.src,order:i+1});
+ }
+ return result;
+}
+async function savePublicArticle(request,env){
+ const body=await readJSON(request),input=body.article||body;
+ const title=requiredText(input.title,'Titre',180),text=requiredText(input.text||input.description,'Texte',20000),summary=optionalText(input.summary||text.slice(0,260),500);
+ const date=validIsoDate(input.date),indexFile=await githubFile(env,env.CONTENT_REPO,'actualites/index.json'),index=JSON.parse(decodeBase64(indexFile.content));
+ if(!Array.isArray(index.articles))throw Object.assign(new Error('Index des actualités invalide.'),{status:502});
+ const requested=String(input.id||'').toUpperCase(),existingMeta=requested?index.articles.find(a=>a.id===requested):null;
+ if(requested&&!/^A\d{7}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant d’actualité invalide.'),{status:400});
+ if(requested&&!existingMeta)throw Object.assign(new Error('Actualité introuvable dans le dépôt.'),{status:404});
+ const assigned=existingMeta?{id:existingMeta.id,number:Number(existingMeta.number)||Number((existingMeta.id.match(/^A(\d+)/)||[])[1])}:newArticleId(index);
+ const id=assigned.id,seasonCode=existingMeta?.seasonCode||safeSeason(index),season=existingMeta?.season||index.seasonSystem?.currentSeason||'';
+ const oldFile=existingMeta?await githubFile(env,env.CONTENT_REPO,existingMeta.path||('actualites/'+id+'/contenu.json')):null;
+ const old=oldFile?JSON.parse(decodeBase64(oldFile.content)):{};
+ const photos=await persistPhotos(env,'actualites',id,cleanUploads(input.photos||[]));
+ const category=optionalText(input.category||old.category||'Vie de l’association',100);
+ const categoryKey=optionalText(input.categoryKey||old.categoryKey||category.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),80);
+ const layoutCode=String(input.layoutCode||old.layoutCode||'H04').toUpperCase();
+ if(!/^H(?:0[1-9]|1\d|2[0-8])$/.test(layoutCode))throw Object.assign(new Error('Disposition H01 à H28 attendue.'),{status:400});
+ const event=input.event&&input.event.date?{date:validIsoDate(input.event.date,true),time:String(input.event.time||''),location:optionalText(input.event.location,250),category:optionalText(input.event.category,100)}:null;
+ const placements={news:true,homeLatest:input.placements?.homeLatest!==false,upcomingEvents:!!event&&new Date(event.date+'T23:59:59')>=new Date()};
+ const now=new Date().toISOString(),content={...old,schemaVersion:2,id,number:assigned.number,seasonCode,season,status:'published',type:'actualite',category,categoryKey,title,summary,date,publishedAt:existingMeta?.publishedAt||now,layoutCode,coverImage:photos[0]?.src||'',text,photos,documents:Array.isArray(input.documents)?input.documents:old.documents||[],event,placements,metrics:{...old.metrics,photoCount:photos.length,uploadedPhotoCount:photos.length,expectedPhotoCount:photos.length,documentCount:Array.isArray(input.documents)?input.documents.length:(old.documents||[]).length,hasGallery:photos.length>9,mediaImportPending:false}};
+ const path='actualites/'+id+'/contenu.json',layoutPath='actualites/'+id+'/layout.json',mediaPath='actualites/'+id+'/media.json',writes=[];
+ writes.push(await writePublicFile(env,path,JSON.stringify(content,null,2)+'\n'));
+ writes.push(await writePublicFile(env,layoutPath,JSON.stringify({layoutCode,photos,documents:content.documents,gallery:photos.length>9},null,2)+'\n'));
+ writes.push(await writePublicFile(env,mediaPath,JSON.stringify({photos,documents:content.documents},null,2)+'\n'));
+ const meta={...(existingMeta||{}),id,number:assigned.number,seasonCode,season,status:'published',type:'actualite',category,categoryKey,title,summary,date,publishedAt:content.publishedAt,layoutCode,coverImage:content.coverImage,path,event,placements,metrics:content.metrics,cover:photos[0]?{src:photos[0].src,order:1}:null};
+ const articles=[...index.articles.filter(a=>a.id!==id),meta].sort((a,b)=>(Number(b.number)||0)-(Number(a.number)||0));
+ const next={...index,contentVersion:(Number(index.contentVersion)||0)+1,updatedAt:now,articles};
+ if(!existingMeta)next.nextArticleNumber=Math.max(Number(index.nextArticleNumber)||1,assigned.number+1);
+ writes.push(await writePublicFile(env,'actualites/index.json',JSON.stringify(next,null,2)+'\n'));
+ return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photos.length,commits:writes},200,request,env);
+}
+async function savePublicOuting(request,env){
+ const body=await readJSON(request),input=body.sortie||body;
+ const title=requiredText(input.title,'Titre',180),summary=optionalText(input.summary||input.description,1000),description=requiredText(input.description||input.text,'Description',20000);
+ const startDate=validIsoDate(input.startDate||input.date,true),endDate=validIsoDate(input.endDate||input.startDate||input.date,true);
+ if(endDate<startDate)throw Object.assign(new Error('La date de fin doit être après la date de début.'),{status:400});
+ for(const key of ['helloAssoUrl','registrationUrl','documentUrl'])if(input[key]&&!/^https:\/\//i.test(String(input[key])))throw Object.assign(new Error('Les liens doivent commencer par https://.'),{status:400});
+ const indexFile=await githubFile(env,env.CONTENT_REPO,'sorties/index.json'),index=JSON.parse(decodeBase64(indexFile.content)),items=Array.isArray(index)?index:(index.sorties||[]);
+ const requested=String(input.id||'').toUpperCase(),found=requested?items.find(x=>String(x.id).toUpperCase()===requested):null;
+ if(requested&&!/^S\d{5,}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant de sortie invalide.'),{status:400});
+ if(requested&&!found)throw Object.assign(new Error('Sortie introuvable dans le dépôt.'),{status:404});
+ const code=safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
+ const id=found?found.id:newOutingId({sorties:items},code),photos=await persistPhotos(env,'sorties',id,cleanUploads(input.photos||[])),now=new Date().toISOString();
+ const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),updatedAt:now};
+ const updated=[...items.filter(x=>x.id!==id),out].sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
+ const payload=Array.isArray(index)?updated:{...index,sorties:updated,updatedAt:now};
+ const write=await writePublicFile(env,'sorties/index.json',JSON.stringify(payload,null,2)+'\n');
+ return json({ok:true,type:'sortie',id,repository:env.CONTENT_REPO,paths:[...photos.map((_,i)=>'sorties/'+id+'/medias/photo-'+String(i+1).padStart(3,'0')+'.'+photos[i].src.split('.').pop()),'sorties/index.json'],photosSelected:(input.photos||[]).length,photosImported:photos.length,commits:[write]},200,request,env);
+}
+
 async function githubFile(env,repo,path){
  const response=await fetch(githubURL(env,repo,path),{headers:githubHeaders(env)});
  if(!response.ok){const error=new Error('Lecture GitHub impossible ('+response.status+').');error.status=response.status;throw error}
@@ -185,6 +292,12 @@ async function githubFile(env,repo,path){
 }
 async function githubPut(env,repo,path,content,sha,message){
  const payload={message,content:encodeBase64(content),branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
+ const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
+ return response.json();
+}
+async function githubPutBase64(env,repo,path,base64,sha,message){
+ const payload={message,content:base64,branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
  const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
  if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
  return response.json();
