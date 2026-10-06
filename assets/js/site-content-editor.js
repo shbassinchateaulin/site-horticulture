@@ -36,5 +36,5 @@ function attach(){css();let tree=$('.page-tree');if(!tree)return;if(!$('#sceActi
 if(!$('#sceEditFull')&&$('#articleEditor')){let b=document.createElement('button');b.className='btn secondary';b.id='sceEditFull';b.textContent='Modifier le contenu complet';$('#articleEditor').append(b);b.onclick=()=>window.sceSelected&&editArticle(window.sceSelected)}
 if(!tree.dataset.sce){tree.dataset.sce=1;tree.addEventListener('click',e=>{let a=e.target.closest('[data-article]');if(a)window.sceSelected=a.dataset.article},true)}
 if(token()&&!index)loadIndex().catch(e=>{let x=$('#sceOutings');if(x)x.textContent='Lecture impossible : '+e.message})}
-new MutationObserver(attach).observe(document.body,{subtree:true,childList:true});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});else attach();
+new MutationObserver(attach).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden']});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});else attach();
 })();
