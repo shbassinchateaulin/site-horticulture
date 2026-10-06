@@ -223,13 +223,13 @@ function cleanUploads(value){
   return{data,mimeType:mime,ext,order:index+1};
  });
 }
-async function persistPhotos(env,collection,id,items){
+async function persistPhotos(env,collection,id,items,writes=[]){
  const result=[];
  for(let i=0;i<items.length;i++){
   const item=items[i];
   if(item.data){
    const src='medias/photo-'+String(i+1).padStart(3,'0')+'.'+item.ext,path=collection+'/'+id+'/'+src;
-   await writePublicFile(env,path,item.data,true);
+   writes.push(await writePublicFile(env,path,item.data,true));
    result.push({src,order:i+1});
   }else result.push({src:item.src,order:i+1});
  }
@@ -247,7 +247,7 @@ async function savePublicArticle(request,env){
  const id=assigned.id,seasonCode=existingMeta?.seasonCode||safeSeason(index),season=existingMeta?.season||index.seasonSystem?.currentSeason||'';
  const oldFile=existingMeta?await githubFile(env,env.CONTENT_REPO,existingMeta.path||('actualites/'+id+'/contenu.json')):null;
  const old=oldFile?JSON.parse(decodeBase64(oldFile.content)):{};
- const photos=await persistPhotos(env,'actualites',id,cleanUploads(input.photos||[]));
+ const writes=[];const photoInputs=cleanUploads(input.photos||[]),photos=await persistPhotos(env,'actualites',id,photoInputs,writes);
  const category=optionalText(input.category||old.category||'Vie de l’association',100);
  const categoryKey=optionalText(input.categoryKey||old.categoryKey||category.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),80);
  const layoutCode=String(input.layoutCode||old.layoutCode||'H04').toUpperCase();
@@ -255,7 +255,7 @@ async function savePublicArticle(request,env){
  const event=input.event&&input.event.date?{date:validIsoDate(input.event.date,true),time:String(input.event.time||''),location:optionalText(input.event.location,250),category:optionalText(input.event.category,100)}:null;
  const placements={news:true,homeLatest:input.placements?.homeLatest!==false,upcomingEvents:!!event&&new Date(event.date+'T23:59:59')>=new Date()};
  const now=new Date().toISOString(),content={...old,schemaVersion:2,id,number:assigned.number,seasonCode,season,status:'published',type:'actualite',category,categoryKey,title,summary,date,publishedAt:existingMeta?.publishedAt||now,layoutCode,coverImage:photos[0]?.src||'',text,photos,documents:Array.isArray(input.documents)?input.documents:old.documents||[],event,placements,metrics:{...old.metrics,photoCount:photos.length,uploadedPhotoCount:photos.length,expectedPhotoCount:photos.length,documentCount:Array.isArray(input.documents)?input.documents.length:(old.documents||[]).length,hasGallery:photos.length>9,mediaImportPending:false}};
- const path='actualites/'+id+'/contenu.json',layoutPath='actualites/'+id+'/layout.json',mediaPath='actualites/'+id+'/media.json',writes=[];
+ const path='actualites/'+id+'/contenu.json',layoutPath='actualites/'+id+'/layout.json',mediaPath='actualites/'+id+'/media.json';
  writes.push(await writePublicFile(env,path,JSON.stringify(content,null,2)+'\n'));
  writes.push(await writePublicFile(env,layoutPath,JSON.stringify({layoutCode,photos,documents:content.documents,gallery:photos.length>9},null,2)+'\n'));
  writes.push(await writePublicFile(env,mediaPath,JSON.stringify({photos,documents:content.documents},null,2)+'\n'));
@@ -264,7 +264,7 @@ async function savePublicArticle(request,env){
  const next={...index,contentVersion:(Number(index.contentVersion)||0)+1,updatedAt:now,articles};
  if(!existingMeta)next.nextArticleNumber=Math.max(Number(index.nextArticleNumber)||1,assigned.number+1);
  writes.push(await writePublicFile(env,'actualites/index.json',JSON.stringify(next,null,2)+'\n'));
- return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photos.length,commits:writes},200,request,env);
+ return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
 }
 async function savePublicOuting(request,env){
  const body=await readJSON(request),input=body.sortie||body;
@@ -277,12 +277,12 @@ async function savePublicOuting(request,env){
  if(requested&&!/^S\d{5,}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant de sortie invalide.'),{status:400});
  if(requested&&!found)throw Object.assign(new Error('Sortie introuvable dans le dépôt.'),{status:404});
  const code=safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
- const id=found?found.id:newOutingId({sorties:items},code),photos=await persistPhotos(env,'sorties',id,cleanUploads(input.photos||[])),now=new Date().toISOString();
+ const id=found?found.id:newOutingId({sorties:items},code),photoInputs=cleanUploads(input.photos||[]),writes=[],photos=await persistPhotos(env,'sorties',id,photoInputs,writes),now=new Date().toISOString();
  const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),updatedAt:now};
  const updated=[...items.filter(x=>x.id!==id),out].sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
  const payload=Array.isArray(index)?updated:{...index,sorties:updated,updatedAt:now};
- const write=await writePublicFile(env,'sorties/index.json',JSON.stringify(payload,null,2)+'\n');
- return json({ok:true,type:'sortie',id,repository:env.CONTENT_REPO,paths:[...photos.map((_,i)=>'sorties/'+id+'/medias/photo-'+String(i+1).padStart(3,'0')+'.'+photos[i].src.split('.').pop()),'sorties/index.json'],photosSelected:(input.photos||[]).length,photosImported:photos.length,commits:[write]},200,request,env);
+ writes.push(await writePublicFile(env,'sorties/index.json',JSON.stringify(payload,null,2)+'\n'));
+ return json({ok:true,type:'sortie',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
 }
 
 async function githubFile(env,repo,path){
