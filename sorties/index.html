@@ -29,7 +29,7 @@
 const renderAngers=item=>{
  document.querySelector('.outings-page').classList.add('trip-view');
  loading.hidden=true;empty.hidden=true;content.hidden=false;
- const pics=item.tripPhotos||[];
+ const pics=Array.isArray(item.tripPhotos)&&item.tripPhotos.length?item.tripPhotos:(Array.isArray(item.photos)?item.photos:[]);
  const names=['Angers et ses jardins','Le château d’Angers','Terra Botanica','Le Jardin des plantes','Jardins et floraisons','Les paysages angevins'];
  const photo=n=>'<figure class="photo-slot" data-photo-slot="'+(n+1)+'">'+(pics[n]?'<img src="'+esc(media(item,pics[n]))+'" alt="'+names[n]+'" loading="lazy">':'<span>'+names[n]+'<br>Photo à venir</span>')+'</figure>';
  const days=[
