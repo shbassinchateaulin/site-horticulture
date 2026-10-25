@@ -489,7 +489,10 @@ function parsePermissions(value){
 function normalizePermissions(value,role){
  const supplied=parsePermissions(value).map(permissionKey).filter(Boolean);
  const permissions=new Set([...permissionsFor(role),...supplied]);
- // The existing administration grants publishing through 'communication' (actualités)\n // and 'sorties'. Google Sheets returns those legacy permission keys. Map them to\n // the Worker publisher scope, without granting users.manage or settings.write.\n // Accounts with no explicit publication permission remain denied.
+ // The existing administration grants publishing through 'communication' (actualités)
+ // and 'sorties'. Google Sheets returns those legacy permission keys. Map them to
+ // the Worker publisher scope, without granting users.manage or settings.write.
+ // Accounts with no explicit publication permission remain denied.
  if(supplied.some(p=>['publier','publication','publisher','content.write','articles.layout','communication','sorties'].includes(p))){
   permissionsFor('publisher').forEach(p=>permissions.add(p));
  }
