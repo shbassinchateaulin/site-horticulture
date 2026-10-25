@@ -25,7 +25,7 @@ test('publishes news and outings with confirmed GitHub media writes',async()=>{
  try{
   const news=await publish('/content/actualites',{article:{title:'Actualité test',text:'Texte de test.',summary:'Résumé.',season:'2026-2027',photos:[{mimeType:'image/jpeg',data:'aGVsbG8='}]}});
   assert.equal(news.status,200);assert.equal(news.data.ok,true);assert.equal(news.data.id,'A0000013AAB');assert.equal(news.data.photosImported,1);assert.ok(news.data.commits.every(x=>x.commitSha&&x.blobSha));assert.ok(files.has('actualites/A0000013AAB/medias/photo-001.jpg'));assert.ok(files.get('actualites/index.json').includes('A0000012AAA'));
-  const outing=await publish('/content/sorties',{sortie:{title:'Sortie test',description:'Description test',startDate:'2027-02-01',endDate:'2027-02-02',photos:[{mimeType:'image/jpeg',data:'aGVsbG8='}]}});
+  const outing=await publish('/content/sorties',{sortie:{title:'Sortie test',description:'Description test',startDate:'2027-02-01',endDate:'2027-02-02',season:'2026-2027',photos:[{mimeType:'image/jpeg',data:'aGVsbG8='}]}});
   assert.equal(outing.status,200);assert.equal(outing.data.id,'S00002AAB');assert.equal(outing.data.photosImported,1);assert.ok(outing.data.commits.every(x=>x.commitSha&&x.blobSha));assert.ok(files.has('sorties/S00002AAB/medias/photo-001.jpg'));assert.ok(files.get('sorties/index.json').includes('S00001AAA'));
  }finally{globalThis.fetch=originalFetch}
 });
