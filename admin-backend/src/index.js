@@ -76,6 +76,7 @@ async function handle(request,env){
   if(!/^[a-f0-9-]{36}$/.test(draftId)||!/^[a-f0-9-]{36}$/.test(mediaId))return json({error:'Identifiant invalide.'},400,request,env);
   const repo=env.DRAFT_REPO||'horticulture-brouillons',path='drafts/'+draftId+'/media/'+mediaId;
   if(request.method==='PUT'){
+   try{await githubFile(env,repo,'drafts/'+draftId+'/draft.json')}catch(error){if(error.status===404)return json({error:'Brouillon introuvable.'},404,request,env);throw error}
    const body=await readJSON(request),encoded=String(body.data||''),mime=String(body.mimeType||'');
    if(!['image/webp','image/jpeg','image/png','application/pdf'].includes(mime)||encoded.length>7500000||!encoded||!(/^[A-Za-z0-9+/]+={0,2}$/).test(encoded))return json({error:'Média invalide ou trop volumineux.'},413,request,env);
    let previous=null;try{previous=await githubFile(env,repo,path)}catch(error){if(error.status!==404)throw error}
