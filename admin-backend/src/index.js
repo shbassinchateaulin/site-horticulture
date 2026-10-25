@@ -111,6 +111,10 @@ async function handle(request,env){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return savePublicArticle(request,env);
  }
+ if(url.pathname==='/content/sorties/generate-gemini'&&request.method==='POST'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  return generateGeminiOutingLayout(request,env);
+ }
  if(url.pathname==='/content/sorties/generate-layout'&&request.method==='POST'){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return generateOutingLayout(request,env);
@@ -325,6 +329,30 @@ async function savePublicArticle(request,env){
  writes.push(await writePublicFile(env,'actualites/index.json',JSON.stringify(next,null,2)+'\n'));
  return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
 }
+async function generateGeminiOutingLayout(request,env){
+ if(!env.GEMINI_API_KEY)return json({error:'Ajoutez GEMINI_API_KEY aux secrets du Worker Cloudflare.'},503,request,env);
+ const body=await readJSON(request),title=requiredText(body.title,'Titre',180),description=requiredText(body.description,'Programme',12000);
+ const instruction='Tu es maquettiste éditorial pour une association horticole française. Réorganise uniquement les informations fournies, sans inventer dates, prix, lieux ou prestations. Retourne strictement un objet JSON avec keys heroSubtitle (string <= 180), introduction (string <= 700), sections (array de 2 à 8 objets {heading:string,body:string}, textes <= 2500), closing (string <= 400). Style élégant, clair, accessible, sans markdown ni HTML. Les liens HelloAsso et PDF seront affichés séparément, ne les invente pas.';
+ const headers={'x-goog-api-key':env.GEMINI_API_KEY};
+ const catalog=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers});
+ if(!catalog.ok)return json({error:'Impossible de consulter les modèles Gemini disponibles ('+catalog.status+').'},502,request,env);
+ const models=(await catalog.json()).models||[];
+ const candidates=models.filter(m=>m.supportedGenerationMethods?.includes('generateContent')&&/gemini-\\d/i.test(m.name||'')&&/flash/i.test(m.name||'')&&!/lite|preview|exp|image|audio|tts|live/i.test(m.name||''))
+ .sort((a,b)=>{const v=x=>{const z=(x.name||'').match(/gemini-(\\d+)(?:\\.(\\d+))?/);return z?Number(z[1])*100+Number(z[2]||0):0};return v(b)-v(a)}).map(m=>m.name);
+ if(!candidates.length)return json({error:'Aucun modèle Gemini Flash utilisable n’est disponible pour cette clé.'},503,request,env);
+ const userData={title,description,summary:optionalText(body.summary,1000),location:optionalText(body.location,250),startDate:validIsoDate(body.startDate,true),endDate:validIsoDate(body.endDate,true)};
+ let result=null,selectedModel='',lastError='';
+ for(const model of [...new Set(candidates)].slice(0,8)){
+  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:instruction}]},contents:[{role:'user',parts:[{text:JSON.stringify(userData)}]}],generationConfig:{responseMimeType:'application/json',maxOutputTokens:3000}})});
+  if(!response.ok){lastError='Erreur '+response.status;if([400,404,422].includes(response.status))continue;return json({error:'Génération Gemini indisponible ('+response.status+').'},502,request,env)}
+  const data=await response.json();try{result=JSON.parse((data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join(''));selectedModel=model;break}catch{lastError='Réponse non exploitable'}
+ }
+ if(!result)return json({error:'Aucun modèle Gemini n’a pu produire la mise en page. '+lastError},502,request,env);
+ const layout={heroSubtitle:optionalText(result.heroSubtitle,180),introduction:optionalText(result.introduction,700),sections:(Array.isArray(result.sections)?result.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})).filter(x=>x.heading&&x.body),closing:optionalText(result.closing,400)};
+ if(!layout.sections.length)return json({error:'Gemini n’a produit aucune section exploitable.'},502,request,env);
+ return json({ok:true,layout,model:selectedModel,provider:'gemini'},200,request,env);
+}
+
 async function generateOutingLayout(request,env){
  if(!env.OPENAI_API_KEY)return json({error:'Service de mise en page non configuré : ajoutez OPENAI_API_KEY aux secrets du Worker.'},503,request,env);
  const body=await readJSON(request),title=requiredText(body.title,'Titre',180),description=requiredText(body.description,'Programme',12000);
