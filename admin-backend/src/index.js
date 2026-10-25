@@ -85,7 +85,7 @@ async function handle(request,env){
   }
   let previous;try{previous=await githubFile(env,repo,path)}catch(error){if(error.status===404)return json({error:'Média introuvable.'},404,request,env);throw error}
   if(request.method==='DELETE'){await githubDelete(env,repo,path,previous.sha,'Suppression média brouillon');return json({ok:true},200,request,env)}
-  return json({ok:true,data:String(previous.content||'').replace(/\s/g,''),mimeType:'application/octet-stream'},200,request,env);
+  const blobResponse=await fetch('https://api.github.com/repos/'+encodeURIComponent(env.GITHUB_OWNER)+'/'+encodeURIComponent(repo)+'/git/blobs/'+encodeURIComponent(previous.sha),{headers:githubHeaders(env)});if(!blobResponse.ok)throw Object.assign(new Error('Lecture du média GitHub impossible.'),{status:502});const blob=await blobResponse.json();if(blob.encoding!=='base64'||!blob.content)throw Object.assign(new Error('Média GitHub illisible.'),{status:502});return json({ok:true,data:String(blob.content).replace(/\s/g,''),mimeType:'application/octet-stream'},200,request,env);
  }
  const draftMatch=url.pathname.match(/^\/drafts\/([a-f0-9-]{36})$/);
  if(draftMatch&&['GET','DELETE'].includes(request.method)){
