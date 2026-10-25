@@ -246,7 +246,7 @@ async function savePublicArticle(request,env){
  const requested=String(input.id||'').toUpperCase(),existingMeta=requested?index.articles.find(a=>a.id===requested):null;
  if(requested&&!/^A\d{7}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant d’actualité invalide.'),{status:400});
  if(requested&&!existingMeta)throw Object.assign(new Error('Actualité introuvable dans le dépôt.'),{status:404});
- const assigned=existingMeta?{id:existingMeta.id,number:Number(existingMeta.number)||Number((existingMeta.id.match(/^A(\d+)/)||[])[1])}:newArticleId(index);
+ const assigned=existingMeta?{id:existingMeta.id,number:Number(existingMeta.number)||Number((existingMeta.id.match(/^A(\d+)/)||[])[1])}:newArticleId({...index,seasonSystem:{...index.seasonSystem,currentCode:seasonFromInput(input.season,index).code}});
  const id=assigned.id,seasonCode=existingMeta?.seasonCode||seasonFromInput(input.season,index).code,season=existingMeta?.season||seasonFromInput(input.season,index).label;
  const oldFile=existingMeta?await githubFile(env,env.CONTENT_REPO,existingMeta.path||('actualites/'+id+'/contenu.json')):null;
  const old=oldFile?JSON.parse(decodeBase64(oldFile.content)):{};
