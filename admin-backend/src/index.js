@@ -111,6 +111,10 @@ async function handle(request,env){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return savePublicArticle(request,env);
  }
+ if(url.pathname==='/content/sorties/generate-layout'&&request.method==='POST'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  return generateOutingLayout(request,env);
+ }
  if(url.pathname==='/content/sorties'&&request.method==='POST'){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return savePublicOuting(request,env);
@@ -321,6 +325,19 @@ async function savePublicArticle(request,env){
  writes.push(await writePublicFile(env,'actualites/index.json',JSON.stringify(next,null,2)+'\n'));
  return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
 }
+async function generateOutingLayout(request,env){
+ if(!env.GROQ_API_KEY)return json({error:'Service IA non configuré : ajoutez GROQ_API_KEY aux secrets du Worker.'},503,request,env);
+ const body=await readJSON(request),title=requiredText(body.title,'Titre',180),description=requiredText(body.description,'Programme',12000);
+ const instruction='Tu es maquettiste éditorial pour une association horticole française. Réorganise uniquement les informations fournies, sans inventer dates, prix, lieux ou prestations. Retourne strictement un objet JSON avec keys heroSubtitle (string <= 180), introduction (string <= 700), sections (array de 2 à 8 objets {heading:string,body:string}, textes <= 2500), closing (string <= 400). Style élégant, clair, accessible, sans markdown ni HTML. Les liens HelloAsso et PDF seront affichés séparément, ne les invente pas.';
+ const payload={model:env.GROQ_LAYOUT_MODEL||'llama-3.3-70b-versatile',temperature:0.35,max_completion_tokens:2400,response_format:{type:'json_object'},messages:[{role:'system',content:instruction},{role:'user',content:JSON.stringify({title,description,summary:optionalText(body.summary,1000),location:optionalText(body.location,250),startDate:validIsoDate(body.startDate,true),endDate:validIsoDate(body.endDate,true)})}]};
+ const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.GROQ_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!response.ok)return json({error:'Génération IA indisponible ('+response.status+'). Réessayez plus tard.'},502,request,env);
+ const data=await response.json();let result;try{result=JSON.parse(data.choices?.[0]?.message?.content||'')}catch{throw Object.assign(new Error('La réponse IA n’est pas exploitable.'),{status:502})}
+ const layout={heroSubtitle:optionalText(result.heroSubtitle,180),introduction:optionalText(result.introduction,700),sections:(Array.isArray(result.sections)?result.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})).filter(x=>x.heading&&x.body),closing:optionalText(result.closing,400)};
+ if(!layout.sections.length)throw Object.assign(new Error('La génération IA n’a produit aucune section.'),{status:502});
+ return json({ok:true,layout},200,request,env);
+}
+
 async function savePublicOuting(request,env){
  const body=await readJSON(request),input=body.sortie||body;
  const title=requiredText(input.title,'Titre',180),summary=optionalText(input.summary||input.description,1000),description=requiredText(input.description||input.text,'Description',20000);
@@ -331,9 +348,9 @@ async function savePublicOuting(request,env){
  const requested=String(input.id||'').toUpperCase(),found=requested?items.find(x=>String(x.id).toUpperCase()===requested):null;
  if(requested&&!/^S\d{5,}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant de sortie invalide.'),{status:400});
  if(requested&&!found)throw Object.assign(new Error('Sortie introuvable dans le dépôt.'),{status:404});
- const code=safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
+ const requestedSeason=String(input.season||'').toUpperCase();if(requestedSeason&&!/^[A-Z]{3}$/.test(requestedSeason))throw Object.assign(new Error('Code de saison invalide.'),{status:400});const code=requestedSeason||safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
  const id=found?found.id:newOutingId({sorties:items},code),photoInputs=cleanUploads(input.photos||[]),writes=[],photos=await persistPhotos(env,'sorties',id,photoInputs,writes),now=new Date().toISOString();
- const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},pricingText:optionalText(input.pricingText||found?.pricingText,1000),cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),updatedAt:now};
+ const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},pricingText:optionalText(input.pricingText||found?.pricingText,1000),cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),aiLayout:input.aiLayout&&typeof input.aiLayout==='object'?{heroSubtitle:optionalText(input.aiLayout.heroSubtitle,180),introduction:optionalText(input.aiLayout.introduction,700),sections:(Array.isArray(input.aiLayout.sections)?input.aiLayout.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})),closing:optionalText(input.aiLayout.closing,400)}:(found?.aiLayout||null),updatedAt:now};
  const updated=[...items.filter(x=>x.id!==id),out].sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
  const payload=Array.isArray(index)?updated:{...index,sorties:updated,updatedAt:now};
  writes.push(await writePublicFile(env,'sorties/index.json',JSON.stringify(payload,null,2)+'\n'));
