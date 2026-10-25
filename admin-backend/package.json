@@ -9,7 +9,7 @@
     "db:remote": "wrangler d1 execute horticulture-admin --remote --file=schema.sql",
     "db:migrate-google-auth": "wrangler d1 execute horticulture-admin --remote --file=migrations/0002_google_sheet_auth.sql",
     "test": "node --test test/*.test.js",
-    "db:migrate-drafts": "wrangler d1 execute horticulture-admin --remote --file=migrations/0002_publication_drafts.sql"
+    "db:migrate-drafts": "wrangler d1 execute horticulture-admin --remote --file=migrations/0003_publication_drafts.sql"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
