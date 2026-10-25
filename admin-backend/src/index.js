@@ -489,8 +489,11 @@ function parsePermissions(value){
 function normalizePermissions(value,role){
  const supplied=parsePermissions(value).map(permissionKey).filter(Boolean);
  const permissions=new Set([...permissionsFor(role),...supplied]);
- // Explicit publication permissions allow the editor, never account management.
- if(supplied.some(p=>['publier','publication','publisher','content.write','articles.layout'].includes(p))){
+ // The existing administration grants publishing through 'communication' (actualités)
+ // and 'sorties'. Google Sheets returns those legacy permission keys. Map them to
+ // the Worker publisher scope, without granting users.manage or settings.write.
+ // Accounts with no explicit publication permission remain denied.
+ if(supplied.some(p=>['publier','publication','publisher','content.write','articles.layout','communication','sorties'].includes(p))){
   permissionsFor('publisher').forEach(p=>permissions.add(p));
  }
  return[...permissions];
