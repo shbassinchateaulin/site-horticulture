@@ -200,6 +200,7 @@ function requiredText(value,label,max=12000){const text=String(value||'').trim()
 function optionalText(value,max=12000){const text=String(value||'').trim();if(text.length>max)throw Object.assign(new Error('Un champ texte est trop long.'),{status:400});return text}
 function validIsoDate(value,required=false){const date=String(value||'').trim();if(!date&& !required)return'';if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date+'T00:00:00Z')))throw Object.assign(new Error('Date invalide.'),{status:400});return date}
 function safeSeason(index){const code=String(index.seasonSystem?.currentCode||'AAA').toUpperCase();return/^[A-Z]{3}$/.test(code)?code:'AAA'}
+function seasonFromInput(value,index){const raw=String(value||'').trim();const match=raw.match(/^(20\d{2})\s*[-–/]\s*(20\d{2})$/);if(!raw)return{code:safeSeason(index),label:index.seasonSystem?.currentSeason||''};if(!match||Number(match[2])!==Number(match[1])+1||Number(match[1])<2025||Number(match[1])>2100)throw Object.assign(new Error('Saison invalide.'),{status:400});let n=Number(match[1])-2025;const code=String.fromCharCode(65+Math.floor(n/676)%26,65+Math.floor(n/26)%26,65+n%26);return{code,label:match[1]+'-'+match[2]}}
 function newArticleId(index){const number=Math.max(Number(index.nextArticleNumber)||1,...(index.articles||[]).map(a=>Number(a.number)||0))+((Number(index.nextArticleNumber)||1)>Math.max(0,...(index.articles||[]).map(a=>Number(a.number)||0))?0:1);return{id:'A'+String(number).padStart(7,'0')+safeSeason(index),number}}
 function newOutingId(index,code){const numbers=(index.sorties||[]).map(x=>Number((String(x.id||'').match(/^S(\d+)/i)||[])[1])||0);return'S'+String(Math.max(0,...numbers)+1).padStart(5,'0')+code}
 function safePhotoPath(path){const raw=String(path||'').trim();if(/^https:\/\//i.test(raw)){try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return''}}const value=raw.replace(/^\.\//,'');return/^medias\/[a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)$/i.test(value)&&!value.includes('..')?value:''}
@@ -208,6 +209,8 @@ async function writePublicFile(env,path,content,base64=false){
   const prior=await githubFile(env,env.CONTENT_REPO,path).catch(error=>{if(error.status===404)return null;throw error});
   const result=base64?await githubPutBase64(env,env.CONTENT_REPO,path,content,prior?.sha||null,'Ajoute un média de publication'):await githubPut(env,env.CONTENT_REPO,path,content,prior?.sha||null,'Met à jour le contenu public');
   if(!result?.commit?.sha||!result?.content?.sha)throw new Error('Réponse GitHub incomplète');
+  const verified=await githubFile(env,env.CONTENT_REPO,path);
+  if(verified.sha!==result.content.sha)throw new Error('Vérification GitHub non concordante');
   return{path,commitSha:result.commit.sha,blobSha:result.content.sha};
  }catch(error){console.error('GitHub publication failed',{path,status:error.status||0});throw Object.assign(new Error('Écriture GitHub non confirmée pour '+path+'. La publication n’est pas considérée comme réussie.'),{status:502})}
 }
@@ -244,7 +247,7 @@ async function savePublicArticle(request,env){
  if(requested&&!/^A\d{7}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant d’actualité invalide.'),{status:400});
  if(requested&&!existingMeta)throw Object.assign(new Error('Actualité introuvable dans le dépôt.'),{status:404});
  const assigned=existingMeta?{id:existingMeta.id,number:Number(existingMeta.number)||Number((existingMeta.id.match(/^A(\d+)/)||[])[1])}:newArticleId(index);
- const id=assigned.id,seasonCode=existingMeta?.seasonCode||safeSeason(index),season=existingMeta?.season||index.seasonSystem?.currentSeason||'';
+ const id=assigned.id,seasonCode=existingMeta?.seasonCode||seasonFromInput(input.season,index).code,season=existingMeta?.season||seasonFromInput(input.season,index).label;
  const oldFile=existingMeta?await githubFile(env,env.CONTENT_REPO,existingMeta.path||('actualites/'+id+'/contenu.json')):null;
  const old=oldFile?JSON.parse(decodeBase64(oldFile.content)):{};
  const writes=[];const photoInputs=cleanUploads(input.photos||[]),photos=await persistPhotos(env,'actualites',id,photoInputs,writes);
@@ -276,7 +279,7 @@ async function savePublicOuting(request,env){
  const requested=String(input.id||'').toUpperCase(),found=requested?items.find(x=>String(x.id).toUpperCase()===requested):null;
  if(requested&&!/^S\d{5,}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant de sortie invalide.'),{status:400});
  if(requested&&!found)throw Object.assign(new Error('Sortie introuvable dans le dépôt.'),{status:404});
- const code=safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
+ const code=seasonFromInput(input.season,JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content))).code;
  const id=found?found.id:newOutingId({sorties:items},code),photoInputs=cleanUploads(input.photos||[]),writes=[],photos=await persistPhotos(env,'sorties',id,photoInputs,writes),now=new Date().toISOString();
  const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},pricingText:optionalText(input.pricingText||found?.pricingText,1000),cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),updatedAt:now};
  const updated=[...items.filter(x=>x.id!==id),out].sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
@@ -293,13 +296,13 @@ async function githubFile(env,repo,path){
 async function githubPut(env,repo,path,content,sha,message){
  const payload={message,content:encodeBase64(content),branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
  const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
- if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
+ if(!response.ok)throw Object.assign(new Error('Enregistrement GitHub impossible ('+response.status+').'),{status:response.status});
  return response.json();
 }
 async function githubPutBase64(env,repo,path,base64,sha,message){
  const payload={message,content:base64,branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
  const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
- if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
+ if(!response.ok)throw Object.assign(new Error('Enregistrement GitHub impossible ('+response.status+').'),{status:response.status});
  return response.json();
 }
 function githubURL(env,repo,path){return'https://api.github.com/repos/'+encodeURIComponent(env.GITHUB_OWNER)+'/'+encodeURIComponent(repo)+'/contents/'+path.split('/').map(encodeURIComponent).join('/')}
