@@ -46,42 +46,57 @@ async function handle(request,env){
  }
  if(url.pathname==='/drafts'&&['GET','POST'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
-  if(request.method==='GET'){const rows=await env.DB.prepare('SELECT id,title,kind,updated_at,created_at,updated_by FROM publication_drafts ORDER BY updated_at DESC LIMIT 100').all();return json({ok:true,drafts:rows.results||[]},200,request,env)}
+  const repo=env.DRAFT_REPO||'horticulture-brouillons';
+  if(request.method==='GET'){
+   const response=await fetch(githubURL(env,repo,'drafts'),{headers:githubHeaders(env)});
+   if(response.status===404)return json({ok:true,drafts:[]},200,request,env);
+   if(!response.ok)throw Object.assign(new Error('Accès au dépôt privé des brouillons impossible ('+response.status+').'),{status:502});
+   const entries=await response.json(),drafts=[];
+   for(const entry of Array.isArray(entries)?entries:[]){
+    if(entry.type!=='dir'||!(/^[a-f0-9-]{36}$/).test(entry.name))continue;
+    try{const file=await githubFile(env,repo,'drafts/'+entry.name+'/draft.json');const doc=JSON.parse(decodeBase64(file.content));drafts.push({id:entry.name,title:doc.title,kind:doc.kind,updated_at:doc.updated_at,created_at:doc.created_at,updated_by:doc.updated_by})}catch(error){console.warn('Draft index item skipped',entry.name,error.message)}
+   }
+   drafts.sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
+   return json({ok:true,drafts:drafts.slice(0,100)},200,request,env);
+  }
   const body=await readJSON(request),draft=body.draft;
   if(!draft||typeof draft!=='object'||Array.isArray(draft))return json({error:'Brouillon invalide.'},400,request,env);
-  const serialized=JSON.stringify(draft);if(serialized.length>180000)return json({error:'Brouillon trop volumineux. Les photos doivent être stockées séparément.'},413,request,env);
-  const id=/^[a-f0-9-]{36}$/.test(String(body.id||''))?body.id:crypto.randomUUID(),now=new Date().toISOString();
-  await env.DB.prepare('INSERT INTO publication_drafts(id,title,kind,payload,created_at,updated_at,updated_by) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,kind=excluded.kind,payload=excluded.payload,updated_at=excluded.updated_at,updated_by=excluded.updated_by').bind(id,String(draft.title||'Sans titre').slice(0,180),draft.kind==='sortie'?'sortie':'actualite',serialized,now,now,session.username).run();
+  const serialized=JSON.stringify(draft);if(serialized.length>180000)return json({error:'Brouillon trop volumineux.'},413,request,env);
+  const id=/^[a-f0-9-]{36}$/.test(String(body.id||''))?body.id:crypto.randomUUID(),path='drafts/'+id+'/draft.json',now=new Date().toISOString();
+  let previous=null;try{previous=await githubFile(env,repo,path)}catch(error){if(error.status!==404)throw error}
+  const old=previous?JSON.parse(decodeBase64(previous.content)):{};
+  const record={id,title:String(draft.title||'Sans titre').slice(0,180),kind:draft.kind==='sortie'?'sortie':'actualite',created_at:old.created_at||now,updated_at:now,updated_by:session.username,draft};
+  await githubPut(env,repo,path,JSON.stringify(record,null,2),previous?.sha,'Sauvegarde brouillon '+id);
   return json({ok:true,id,updatedAt:now},200,request,env);
  }
  const mediaRoute=url.pathname.split('/').filter(Boolean);
  if(mediaRoute[0]==='drafts'&&mediaRoute[2]==='media'&&mediaRoute.length===4&&['GET','PUT','DELETE'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
-  if(!env.DRAFT_MEDIA)return json({error:'Stockage des médias non configuré.'},503,request,env);
   const draftId=mediaRoute[1],mediaId=mediaRoute[3];
   if(!/^[a-f0-9-]{36}$/.test(draftId)||!/^[a-f0-9-]{36}$/.test(mediaId))return json({error:'Identifiant invalide.'},400,request,env);
-  const found=await env.DB.prepare('SELECT id FROM publication_drafts WHERE id=?').bind(draftId).first();
-  if(!found)return json({error:'Brouillon introuvable.'},404,request,env);
-  const key=draftId+'/'+mediaId;
-  if(request.method==='DELETE'){await env.DRAFT_MEDIA.delete(key);return json({ok:true},200,request,env)}
+  const repo=env.DRAFT_REPO||'horticulture-brouillons',path='drafts/'+draftId+'/media/'+mediaId;
   if(request.method==='PUT'){
    const body=await readJSON(request),encoded=String(body.data||''),mime=String(body.mimeType||'');
    if(!['image/webp','image/jpeg','image/png','application/pdf'].includes(mime)||encoded.length>7500000||!encoded||!(/^[A-Za-z0-9+/]+={0,2}$/).test(encoded))return json({error:'Média invalide ou trop volumineux.'},413,request,env);
-   await env.DRAFT_MEDIA.put(key,base64ToBytes(encoded),{httpMetadata:{contentType:mime}});
+   let previous=null;try{previous=await githubFile(env,repo,path)}catch(error){if(error.status!==404)throw error}
+   await githubPutBase64(env,repo,path,encoded,previous?.sha,'Média brouillon '+mediaId);
    return json({ok:true,id:mediaId},200,request,env);
   }
-  const object=await env.DRAFT_MEDIA.get(key);
-  if(!object)return json({error:'Média introuvable.'},404,request,env);
-  const bytes=new Uint8Array(await object.arrayBuffer());
-  let encoded='';for(let i=0;i<bytes.length;i+=8192)encoded+=String.fromCharCode(...bytes.subarray(i,i+8192));
-  return json({ok:true,data:btoa(encoded),mimeType:object.httpMetadata?.contentType||'application/octet-stream'},200,request,env);
+  let previous;try{previous=await githubFile(env,repo,path)}catch(error){if(error.status===404)return json({error:'Média introuvable.'},404,request,env);throw error}
+  if(request.method==='DELETE'){await githubDelete(env,repo,path,previous.sha,'Suppression média brouillon');return json({ok:true},200,request,env)}
+  return json({ok:true,data:String(previous.content||'').replace(/\\n/g,''),mimeType:'application/octet-stream'},200,request,env);
  }
  const draftMatch=url.pathname.match(/^\/drafts\/([a-f0-9-]{36})$/);
  if(draftMatch&&['GET','DELETE'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
-  if(request.method==='DELETE'){if(env.DRAFT_MEDIA){let cursor;do{const batch=await env.DRAFT_MEDIA.list({prefix:draftMatch[1]+'/',cursor});for(const object of batch.objects)await env.DRAFT_MEDIA.delete(object.key);cursor=batch.truncated?batch.cursor:null}while(cursor)}await env.DB.prepare('DELETE FROM publication_drafts WHERE id=?').bind(draftMatch[1]).run();return json({ok:true},200,request,env)}
-  const row=await env.DB.prepare('SELECT id,payload,updated_at FROM publication_drafts WHERE id=?').bind(draftMatch[1]).first();
-  return row?json({ok:true,id:row.id,draft:JSON.parse(row.payload),updatedAt:row.updated_at},200,request,env):json({error:'Brouillon introuvable.'},404,request,env);
+  const repo=env.DRAFT_REPO||'horticulture-brouillons',id=draftMatch[1],path='drafts/'+id+'/draft.json';
+  let file;try{file=await githubFile(env,repo,path)}catch(error){if(error.status===404)return json({error:'Brouillon introuvable.'},404,request,env);throw error}
+  if(request.method==='GET'){const record=JSON.parse(decodeBase64(file.content));return json({ok:true,id,draft:record.draft,updatedAt:record.updated_at},200,request,env)}
+  const listing=await fetch(githubURL(env,repo,'drafts/'+id+'/media'),{headers:githubHeaders(env)});
+  if(listing.ok){const entries=await listing.json();for(const entry of Array.isArray(entries)?entries:[]){if(entry.type==='file')await githubDelete(env,repo,'drafts/'+id+'/media/'+entry.name,entry.sha,'Suppression média brouillon '+id)}}
+  else if(listing.status!==404)throw Object.assign(new Error('Impossible de lister les médias du brouillon.'),{status:502});
+  await githubDelete(env,repo,path,file.sha,'Suppression brouillon '+id);
+  return json({ok:true},200,request,env);
  }
  if(url.pathname==='/content/index'&&request.method==='GET'){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
@@ -341,6 +356,7 @@ async function githubPutBase64(env,repo,path,base64,sha,message){
  if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
  return response.json();
 }
+async function githubDelete(env,repo,path,sha,message){const response=await fetch(githubURL(env,repo,path),{method:'DELETE',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify({message,sha,branch:env.GITHUB_BRANCH||'main'})});if(!response.ok)throw Object.assign(new Error('Suppression GitHub impossible ('+response.status+').'),{status:502});return response.json()}
 function githubURL(env,repo,path){return'https://api.github.com/repos/'+encodeURIComponent(env.GITHUB_OWNER)+'/'+encodeURIComponent(repo)+'/contents/'+path.split('/').map(encodeURIComponent).join('/')}
 function githubHeaders(env){return{'Accept':'application/vnd.github+json','Authorization':'Bearer '+env.GITHUB_TOKEN,'User-Agent':'horticulture-admin-worker','X-GitHub-Api-Version':'2022-11-28'}}
 async function readJSON(request){const type=request.headers.get('Content-Type')||'';if(!type.includes('application/json'))throw Object.assign(new Error('Format JSON attendu.'),{status:415});return request.json()}
