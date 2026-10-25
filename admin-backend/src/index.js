@@ -54,7 +54,7 @@ async function handle(request,env){
   await env.DB.prepare('INSERT INTO publication_drafts(id,title,kind,payload,created_at,updated_at,updated_by) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,kind=excluded.kind,payload=excluded.payload,updated_at=excluded.updated_at,updated_by=excluded.updated_by').bind(id,String(draft.title||'Sans titre').slice(0,180),draft.kind==='sortie'?'sortie':'actualite',serialized,now,now,session.username).run();
   return json({ok:true,id,updatedAt:now},200,request,env);
  }
- const draftMatch=url.pathname.match(/^\\/drafts\\/([a-f0-9-]{36})$/);
+ const draftMatch=url.pathname.match(/^\/drafts\/([a-f0-9-]{36})$/);
  if(draftMatch&&['GET','DELETE'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   if(request.method==='DELETE'){await env.DB.prepare('DELETE FROM publication_drafts WHERE id=?').bind(draftMatch[1]).run();return json({ok:true},200,request,env)}
