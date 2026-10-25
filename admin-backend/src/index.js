@@ -329,13 +329,29 @@ async function generateOutingLayout(request,env){
  if(!env.OPENAI_API_KEY)return json({error:'Service de mise en page non configuré : ajoutez OPENAI_API_KEY aux secrets du Worker.'},503,request,env);
  const body=await readJSON(request),title=requiredText(body.title,'Titre',180),description=requiredText(body.description,'Programme',12000);
  const instruction='Tu es maquettiste éditorial pour une association horticole française. Réorganise uniquement les informations fournies, sans inventer dates, prix, lieux ou prestations. Retourne strictement un objet JSON avec keys heroSubtitle (string <= 180), introduction (string <= 700), sections (array de 2 à 8 objets {heading:string,body:string}, textes <= 2500), closing (string <= 400). Style élégant, clair, accessible, sans markdown ni HTML. Les liens HelloAsso et PDF seront affichés séparément, ne les invente pas.';
- const payload={model:env.OPENAI_LAYOUT_MODEL||'gpt-4.1-mini',temperature:0.35,max_completion_tokens:2400,response_format:{type:'json_object'},messages:[{role:'system',content:instruction},{role:'user',content:JSON.stringify({title,description,summary:optionalText(body.summary,1000),location:optionalText(body.location,250),startDate:validIsoDate(body.startDate,true),endDate:validIsoDate(body.endDate,true)})}]};
- const response=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
- if(!response.ok)return json({error:'Génération IA indisponible ('+response.status+'). Réessayez plus tard.'},502,request,env);
- const data=await response.json();let result;try{result=JSON.parse(data.choices?.[0]?.message?.content||'')}catch{throw Object.assign(new Error('La réponse IA n’est pas exploitable.'),{status:502})}
+ const headers={Authorization:'Bearer '+env.OPENAI_API_KEY,'Content-Type':'application/json'};
+ // Discover available models on each request. Prefer recent general-purpose GPT models,
+ // but verify compatibility with the actual generation endpoint before using the result.
+ const catalog=await fetch('https://api.openai.com/v1/models',{headers:{Authorization:headers.Authorization}});
+ if(!catalog.ok)return json({error:'Impossible de consulter les modèles OpenAI disponibles ('+catalog.status+').'},502,request,env);
+ const available=(await catalog.json()).data||[];
+ const candidates=available.filter(x=>/^gpt-[0-9]/.test(x.id)&&!/(audio|realtime|transcribe|tts|image|search|codex|instruct|preview|chat-latest|deep-research|pro|nano|mini)/i.test(x.id)).sort((a,b)=>(Number(b.created)||0)-(Number(a.created)||0)).map(x=>x.id);
+ // A configurable preference can be used, but is never required.
+ const preferred=String(env.OPENAI_LAYOUT_MODEL||'').trim();
+ if(preferred&&available.some(x=>x.id===preferred))candidates.unshift(preferred);
+ const models=[...new Set(candidates)].slice(0,8);
+ if(!models.length)return json({error:'Aucun modèle GPT généraliste compatible n’est proposé par cette clé API.'},503,request,env);
+ let result=null,selectedModel='',lastError='';
+ for(const model of models){
+  const payload={model,max_completion_tokens:2400,response_format:{type:'json_object'},messages:[{role:'system',content:instruction},{role:'user',content:JSON.stringify({title,description,summary:optionalText(body.summary,1000),location:optionalText(body.location,250),startDate:validIsoDate(body.startDate,true),endDate:validIsoDate(body.endDate,true)})}]};
+  const response=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers,body:JSON.stringify(payload)});
+  if(!response.ok){const error=await response.json().catch(()=>({}));lastError=error.error?.message||'Erreur '+response.status;if([400,404,422].includes(response.status))continue;return json({error:'Génération IA indisponible ('+response.status+').'},502,request,env)}
+  const data=await response.json();try{result=JSON.parse(data.choices?.[0]?.message?.content||'');selectedModel=model;break}catch{lastError='Réponse non exploitable';continue}
+ }
+ if(!result)return json({error:'Aucun modèle OpenAI disponible n’a pu produire la mise en page. '+lastError},502,request,env);
  const layout={heroSubtitle:optionalText(result.heroSubtitle,180),introduction:optionalText(result.introduction,700),sections:(Array.isArray(result.sections)?result.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})).filter(x=>x.heading&&x.body),closing:optionalText(result.closing,400)};
  if(!layout.sections.length)throw Object.assign(new Error('La génération IA n’a produit aucune section.'),{status:502});
- return json({ok:true,layout},200,request,env);
+ return json({ok:true,layout,model:selectedModel},200,request,env);
 }
 
 async function savePublicOuting(request,env){
