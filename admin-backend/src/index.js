@@ -335,11 +335,114 @@ async function generateOutingLayout(request,env){
  const catalog=await fetch('https://api.openai.com/v1/models',{headers:{Authorization:headers.Authorization}});
  if(!catalog.ok)return json({error:'Impossible de consulter les modèles OpenAI disponibles ('+catalog.status+').'},502,request,env);
  const available=(await catalog.json()).data||[];
- // Prefer the current mid-cost GPT mini tier, never the flagship by default.
+ // Prefer medium-cost GPT mini models and refresh the catalog for every generation.
  const eligible=available.filter(x=>/^gpt-[0-9]/.test(x.id)&&!/(audio|realtime|transcribe|tts|image|search|codex|instruct|preview|chat-latest|deep-research|pro)/i.test(x.id));
  const newestFirst=(a,b)=>(Number(b.created)||0)-(Number(a.created)||0);
  const middle=eligible.filter(x=>/mini/i.test(x.id)&&!/nano/i.test(x.id)).sort(newestFirst).map(x=>x.id);
  const standard=eligible.filter(x=>!/mini|nano/i.test(x.id)).sort(newestFirst).map(x=>x.id);
  const models=[...new Set([...middle,...standard])].slice(0,12);
  if(!models.length)return json({error:'Aucun modèle GPT utilisable n’est proposé par cette clé API.'},503,request,env);
+ let result=null,selectedModel='',lastError='';
+ for(const model of models){
+  const payload={model,max_completion_tokens:2400,response_format:{type:'json_object'},messages:[{role:'system',content:instruction},{role:'user',content:JSON.stringify({title,description,summary:optionalText(body.summary,1000),location:optionalText(body.location,250),startDate:validIsoDate(body.startDate,true),endDate:validIsoDate(body.endDate,true)})}]};
+  const response=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers,body:JSON.stringify(payload)});
+  if(!response.ok){const error=await response.json().catch(()=>({}));lastError=error.error?.message||'Erreur '+response.status;if([400,404,422].includes(response.status))continue;return json({error:'Génération IA indisponible ('+response.status+').'},502,request,env)}
+  const data=await response.json();try{result=JSON.parse(data.choices?.[0]?.message?.content||'');selectedModel=model;break}catch{lastError='Réponse non exploitable';continue}
+ }
+ if(!result)return json({error:'Aucun modèle OpenAI disponible n’a pu produire la mise en page. '+lastError},502,request,env);
+ const layout={heroSubtitle:optionalText(result.heroSubtitle,180),introduction:optionalText(result.introduction,700),sections:(Array.isArray(result.sections)?result.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})).filter(x=>x.heading&&x.body),closing:optionalText(result.closing,400)};
+ if(!layout.sections.length)throw Object.assign(new Error('La génération IA n’a produit aucune section.'),{status:502});
+ return json({ok:true,layout,model:selectedModel},200,request,env);
+}
 
+async function savePublicOuting(request,env){
+ const body=await readJSON(request),input=body.sortie||body;
+ const title=requiredText(input.title,'Titre',180),summary=optionalText(input.summary||input.description,1000),description=requiredText(input.description||input.text,'Description',20000);
+ const startDate=validIsoDate(input.startDate||input.date,true),endDate=validIsoDate(input.endDate||input.startDate||input.date,true);
+ if(endDate<startDate)throw Object.assign(new Error('La date de fin doit être après la date de début.'),{status:400});
+ for(const key of ['helloAssoUrl','registrationUrl','documentUrl'])if(input[key]&&!/^https:\/\//i.test(String(input[key])))throw Object.assign(new Error('Les liens doivent commencer par https://.'),{status:400});
+ const indexFile=await githubFile(env,env.CONTENT_REPO,'sorties/index.json'),index=JSON.parse(decodeBase64(indexFile.content)),items=Array.isArray(index)?index:(index.sorties||[]);
+ const requested=String(input.id||'').toUpperCase(),found=requested?items.find(x=>String(x.id).toUpperCase()===requested):null;
+ if(requested&&!/^S\d{5,}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant de sortie invalide.'),{status:400});
+ if(requested&&!found)throw Object.assign(new Error('Sortie introuvable dans le dépôt.'),{status:404});
+ const requestedSeason=String(input.season||'').toUpperCase();if(requestedSeason&&!/^[A-Z]{3}$/.test(requestedSeason))throw Object.assign(new Error('Code de saison invalide.'),{status:400});const code=requestedSeason||safeSeason(JSON.parse(decodeBase64((await githubFile(env,env.CONTENT_REPO,'actualites/index.json')).content)));
+ const id=found?found.id:newOutingId({sorties:items},code),photoInputs=cleanUploads(input.photos||[]),writes=[],photos=await persistPhotos(env,'sorties',id,photoInputs,writes),now=new Date().toISOString();
+ const cover=photos[0]?.src||'',out={...(found||{}),id,status:'published',title,type:optionalText(input.type||found?.type||'Sortie',60),startDate,endDate,summary,description,location:optionalText(input.location,250),pricing:input.pricing||found?.pricing||{},pricingText:optionalText(input.pricingText||found?.pricingText,1000),cover:cover||found?.cover||'',photos:photos.length?photos.map(x=>x.src):(found?.photos||[]),helloAssoUrl:String(input.helloAssoUrl||''),registrationUrl:String(input.registrationUrl||''),registrationLabel:optionalText(input.registrationLabel||'Inscription',80),bookingLabel:optionalText(input.bookingLabel||'S’inscrire',80),documentUrl:String(input.documentUrl||''),aiLayout:input.aiLayout&&typeof input.aiLayout==='object'?{heroSubtitle:optionalText(input.aiLayout.heroSubtitle,180),introduction:optionalText(input.aiLayout.introduction,700),sections:(Array.isArray(input.aiLayout.sections)?input.aiLayout.sections:[]).slice(0,8).map(x=>({heading:optionalText(x.heading,120),body:optionalText(x.body,2500)})),closing:optionalText(input.aiLayout.closing,400)}:(found?.aiLayout||null),updatedAt:now};
+ const updated=[...items.filter(x=>x.id!==id),out].sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
+ const payload=Array.isArray(index)?updated:{...index,sorties:updated,updatedAt:now};
+ writes.push(await writePublicFile(env,'sorties/index.json',JSON.stringify(payload,null,2)+'\n'));
+ return json({ok:true,type:'sortie',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
+}
+
+async function githubFile(env,repo,path){
+ const response=await fetch(githubURL(env,repo,path),{headers:githubHeaders(env)});
+ if(!response.ok){const error=new Error('Lecture GitHub impossible ('+response.status+').');error.status=response.status;throw error}
+ return response.json();
+}
+async function githubPut(env,repo,path,content,sha,message){
+ const payload={message,content:encodeBase64(content),branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
+ const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
+ return response.json();
+}
+async function githubPutBase64(env,repo,path,base64,sha,message){
+ const payload={message,content:base64,branch:env.GITHUB_BRANCH||'main'};if(sha)payload.sha=sha;
+ const response=await fetch(githubURL(env,repo,path),{method:'PUT',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!response.ok)throw new Error('Enregistrement GitHub impossible ('+response.status+').');
+ return response.json();
+}
+async function githubDelete(env,repo,path,sha,message){const response=await fetch(githubURL(env,repo,path),{method:'DELETE',headers:{...githubHeaders(env),'Content-Type':'application/json'},body:JSON.stringify({message,sha,branch:env.GITHUB_BRANCH||'main'})});if(!response.ok)throw Object.assign(new Error('Suppression GitHub impossible ('+response.status+').'),{status:502});return response.json()}
+function githubURL(env,repo,path){return'https://api.github.com/repos/'+encodeURIComponent(env.GITHUB_OWNER)+'/'+encodeURIComponent(repo)+'/contents/'+path.split('/').map(encodeURIComponent).join('/')}
+function githubHeaders(env){return{'Accept':'application/vnd.github+json','Authorization':'Bearer '+env.GITHUB_TOKEN,'User-Agent':'horticulture-admin-worker','X-GitHub-Api-Version':'2022-11-28'}}
+async function readJSON(request){const type=request.headers.get('Content-Type')||'';if(!type.includes('application/json'))throw Object.assign(new Error('Format JSON attendu.'),{status:415});return request.json()}
+async function recordAttempt(env,clientKey,username,success){await env.DB.prepare('INSERT INTO login_attempts (client_key,username,success,attempted_at) VALUES (?,?,?,?)').bind(clientKey,username||'',success?1:0,new Date().toISOString()).run()}
+async function hashPassword(password,saltBytes=crypto.getRandomValues(new Uint8Array(16)),iterations=210000){
+ const key=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+ const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:saltBytes,iterations},key,256);
+ return{hash:bytesToBase64(new Uint8Array(bits)),salt:bytesToBase64(saltBytes),iterations};
+}
+async function verifyPassword(password,salt,expected,iterations){
+ const actual=await hashPassword(password,base64ToBytes(salt),Number(iterations));return timingSafeEqual(actual.hash,expected);
+}
+function timingSafeEqual(a,b){if(a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
+async function sha256(value){const hash=await crypto.subtle.digest('SHA-256',encoder.encode(value));return bytesToHex(new Uint8Array(hash))}
+function randomToken(size){return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(size)))}
+function bytesToHex(bytes){return[...bytes].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function bytesToBase64(bytes){let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s)}
+function bytesToBase64Url(bytes){return bytesToBase64(bytes).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function base64ToBytes(value){const s=atob(value);return Uint8Array.from(s,c=>c.charCodeAt(0))}
+function encodeBase64(value){return bytesToBase64(encoder.encode(value))}
+function decodeBase64(value){return new TextDecoder().decode(base64ToBytes(String(value).replace(/\n/g,'')))}
+function parseCookies(value){return Object.fromEntries(value.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return i<0?[v,'']:[v.slice(0,i),decodeURIComponent(v.slice(i+1))]}))}
+function sessionCookie(token){return'sh_admin_session='+encodeURIComponent(token)+'; Path=/; Max-Age='+(SESSION_HOURS*3600)+'; HttpOnly; Secure; SameSite=None'}
+function expiredCookie(){return'sh_admin_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None'}
+function permissionsFor(role){return ROLE_PERMISSIONS[String(role||'member')]||[]}
+function permissionKey(value){return String(value||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s-]+/g,'_')}
+function normalizeRole(value){
+ const role=permissionKey(value);
+ if(['super_admin','superadmin','super_administrateur'].includes(role))return'super_admin';
+ if(['admin','administrateur','administrator'].includes(role))return'admin';
+ if(['publisher','publieur','publication','editeur'].includes(role))return'publisher';
+ return'member';
+}
+function parsePermissions(value){
+ if(Array.isArray(value))return value.filter(v=>typeof v==='string');
+ if(typeof value!=='string')return[];
+ try{const parsed=JSON.parse(value);return Array.isArray(parsed)?parsed.filter(v=>typeof v==='string'):[]}
+ catch{return value.split(',').map(v=>v.trim()).filter(Boolean)}
+}
+function normalizePermissions(value,role){
+ const supplied=parsePermissions(value).map(permissionKey).filter(Boolean);
+ const permissions=new Set([...permissionsFor(role),...supplied]);
+ // Explicit publication permissions allow the editor, never account management.
+ if(supplied.some(p=>['publier','publication','publisher','content.write','articles.layout'].includes(p))){
+  permissionsFor('publisher').forEach(p=>permissions.add(p));
+ }
+ return[...permissions];
+}
+function hasPermission(session,permission){return session.permissions.includes('*')||session.permissions.includes(permission)}
+function forbidden(request,env){return json({error:'Droits insuffisants pour cette opération.'},403,request,env)}
+function allowedOrigins(env){return new Set(String(env.ALLOWED_ORIGINS||'https://shbassinchateaulin.github.io').split(',').map(x=>x.trim()).filter(Boolean))}
+function corsHeaders(request,env){const origin=request.headers.get('Origin')||'';return allowedOrigins(env).has(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Credentials':'true','Vary':'Origin'}:{}}
+function preflight(request,env){const origin=request.headers.get('Origin')||'';if(!allowedOrigins(env).has(origin))return new Response(null,{status:403});return new Response(null,{status:204,headers:{...corsHeaders(request,env),'Access-Control-Allow-Methods':'GET,POST,PUT,DELETE,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization','Access-Control-Max-Age':'86400'}})}
+function json(data,status,request,env,cookie){const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...corsHeaders(request,env)};if(cookie)headers['Set-Cookie']=cookie;return new Response(JSON.stringify(data),{status,headers})}
