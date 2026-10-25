@@ -54,6 +54,28 @@ async function handle(request,env){
   await env.DB.prepare('INSERT INTO publication_drafts(id,title,kind,payload,created_at,updated_at,updated_by) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,kind=excluded.kind,payload=excluded.payload,updated_at=excluded.updated_at,updated_by=excluded.updated_by').bind(id,String(draft.title||'Sans titre').slice(0,180),draft.kind==='sortie'?'sortie':'actualite',serialized,now,now,session.username).run();
   return json({ok:true,id,updatedAt:now},200,request,env);
  }
+ const mediaRoute=url.pathname.split('/').filter(Boolean);
+ if(mediaRoute[0]==='drafts'&&mediaRoute[2]==='media'&&mediaRoute.length===4&&['GET','PUT','DELETE'].includes(request.method)){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  if(!env.DRAFT_MEDIA)return json({error:'Stockage des médias non configuré.'},503,request,env);
+  const draftId=mediaRoute[1],mediaId=mediaRoute[3];
+  if(!/^[a-f0-9-]{36}$/.test(draftId)||!/^[a-f0-9-]{36}$/.test(mediaId))return json({error:'Identifiant invalide.'},400,request,env);
+  const found=await env.DB.prepare('SELECT id FROM publication_drafts WHERE id=?').bind(draftId).first();
+  if(!found)return json({error:'Brouillon introuvable.'},404,request,env);
+  const key=draftId+'/'+mediaId;
+  if(request.method==='DELETE'){await env.DRAFT_MEDIA.delete(key);return json({ok:true},200,request,env)}
+  if(request.method==='PUT'){
+   const body=await readJSON(request),encoded=String(body.data||''),mime=String(body.mimeType||'');
+   if(!['image/webp','image/jpeg','image/png','application/pdf'].includes(mime)||encoded.length>7500000||!encoded||!(/^[A-Za-z0-9+/]+={0,2}$/).test(encoded))return json({error:'Média invalide ou trop volumineux.'},413,request,env);
+   await env.DRAFT_MEDIA.put(key,base64ToBytes(encoded),{httpMetadata:{contentType:mime}});
+   return json({ok:true,id:mediaId},200,request,env);
+  }
+  const object=await env.DRAFT_MEDIA.get(key);
+  if(!object)return json({error:'Média introuvable.'},404,request,env);
+  const bytes=new Uint8Array(await object.arrayBuffer());
+  let encoded='';for(let i=0;i<bytes.length;i+=8192)encoded+=String.fromCharCode(...bytes.subarray(i,i+8192));
+  return json({ok:true,data:btoa(encoded),mimeType:object.httpMetadata?.contentType||'application/octet-stream'},200,request,env);
+ }
  const draftMatch=url.pathname.match(/^\/drafts\/([a-f0-9-]{36})$/);
  if(draftMatch&&['GET','DELETE'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
