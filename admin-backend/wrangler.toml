@@ -15,3 +15,7 @@ GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwim8t9oVshwze
 binding = "DB"
 database_name = "horticulture-admin"
 database_id = "1bf8009e-9964-4df8-8696-0adec68b2a0d"
+
+[[r2_buckets]]
+binding = "DRAFT_MEDIA"
+bucket_name = "horticulture-draft-media"
