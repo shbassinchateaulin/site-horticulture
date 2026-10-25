@@ -111,6 +111,10 @@ async function handle(request,env){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return savePublicArticle(request,env);
  }
+ if(url.pathname==='/content/writing-assistant'&&request.method==='POST'){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  return generateWritingAssistant(request,env);
+ }
  if(url.pathname==='/content/sorties/generate-gemini'&&request.method==='POST'){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   return generateGeminiOutingLayout(request,env);
@@ -329,6 +333,29 @@ async function savePublicArticle(request,env){
  writes.push(await writePublicFile(env,'actualites/index.json',JSON.stringify(next,null,2)+'\n'));
  return json({ok:true,type:'actualite',id,repository:env.CONTENT_REPO,paths:writes.map(x=>x.path),photosSelected:(input.photos||[]).length,photosImported:photoInputs.filter(x=>x.data).length,commits:writes},200,request,env);
 }
+async function generateWritingAssistant(request,env){
+ if(!env.GEMINI_API_KEY)return json({error:'Clé GEMINI_API_KEY absente des secrets Cloudflare.'},503,request,env);
+ const body=await readJSON(request),mode=String(body.mode||'summary');
+ if(!['summary','rewrite'].includes(mode))return json({error:'Mode de rédaction invalide.'},400,request,env);
+ const source=requiredText(body.source,'Texte ou notes',12000);
+ const context={kind:String(body.kind||'actualite')==='sortie'?'sortie':'actualite',title:optionalText(body.title,180),location:optionalText(body.location,250),startDate:body.startDate||'',endDate:body.endDate||''};
+ const instruction=mode==='summary'?'Tu rédiges pour une association horticole française. Produis un résumé engageant de 2 à 4 phrases, 350 caractères maximum, fidèle aux faits. Ne rajoute aucun lieu, prix, date, prestation ou promesse absente des notes. Réponds uniquement avec le texte final, sans markdown.':'Tu es assistant de rédaction pour une association horticole française. Transforme les notes fournies en un texte fluide, clair, chaleureux et professionnel, en conservant tous les faits sans en inventer. Conserve les détails importants, dates, lieux et modalités. Réponds uniquement avec le texte final, sans markdown.';
+ const headers={'x-goog-api-key':env.GEMINI_API_KEY};
+ const catalog=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers});
+ if(!catalog.ok)return json({error:'Impossible de consulter les modèles Gemini ('+catalog.status+').'},502,request,env);
+ const models=(await catalog.json()).models||[];
+ const rank=m=>{const z=String(m.name||'').match(/gemini-(\\d+)(?:\\.(\\d+))?/);return z?Number(z[1])*100+Number(z[2]||0):0};
+ const candidates=models.filter(m=>m.supportedGenerationMethods?.includes('generateContent')&&/gemini-\\d/i.test(m.name||'')&&/flash/i.test(m.name||'')&&!/lite|preview|exp|image|audio|tts|live/i.test(m.name||'')).sort((a,b)=>rank(b)-rank(a));
+ if(!candidates.length)return json({error:'Aucun modèle Gemini Flash compatible disponible.'},503,request,env);
+ for(const model of candidates.slice(0,8)){
+  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model.name+':generateContent',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:instruction}]},contents:[{role:'user',parts:[{text:JSON.stringify({context,source})}]}],generationConfig:{maxOutputTokens:mode==='summary'?500:3000}})});
+  if(!response.ok){if([400,404,422].includes(response.status))continue;return json({error:'Assistant Gemini indisponible ('+response.status+').'},502,request,env)}
+  const data=await response.json();const textValue=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+  if(textValue)return json({ok:true,text:mode==='summary'?textValue.slice(0,500):textValue.slice(0,20000),model:model.name},200,request,env);
+ }
+ return json({error:'Aucun modèle Gemini n’a pu rédiger le texte.'},502,request,env);
+}
+
 async function generateGeminiOutingLayout(request,env){
  if(!env.GEMINI_API_KEY)return json({error:'Ajoutez GEMINI_API_KEY aux secrets du Worker Cloudflare.'},503,request,env);
  const body=await readJSON(request),title=requiredText(body.title,'Titre',180),description=requiredText(body.description,'Programme',12000);
