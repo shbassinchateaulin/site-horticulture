@@ -2,6 +2,11 @@ name: Deploy shared publication drafts
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'admin-backend/**'
+      - '.github/workflows/deploy-shared-drafts.yml'
 
 permissions:
   contents: read
