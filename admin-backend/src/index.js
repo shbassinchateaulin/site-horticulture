@@ -44,6 +44,23 @@ async function handle(request,env){
   if(!hasPermission(session,'articles.layout'))return forbidden(request,env);
   return saveLayout(request,env,layoutMatch[1].toUpperCase());
  }
+ if(url.pathname==='/drafts'&&['GET','POST'].includes(request.method)){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  if(request.method==='GET'){const rows=await env.DB.prepare('SELECT id,title,kind,updated_at,created_at,updated_by FROM publication_drafts ORDER BY updated_at DESC LIMIT 100').all();return json({ok:true,drafts:rows.results||[]},200,request,env)}
+  const body=await readJSON(request),draft=body.draft;
+  if(!draft||typeof draft!=='object'||Array.isArray(draft))return json({error:'Brouillon invalide.'},400,request,env);
+  const serialized=JSON.stringify(draft);if(serialized.length>180000)return json({error:'Brouillon trop volumineux. Les photos doivent être stockées séparément.'},413,request,env);
+  const id=/^[a-f0-9-]{36}$/.test(String(body.id||''))?body.id:crypto.randomUUID(),now=new Date().toISOString();
+  await env.DB.prepare('INSERT INTO publication_drafts(id,title,kind,payload,created_at,updated_at,updated_by) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,kind=excluded.kind,payload=excluded.payload,updated_at=excluded.updated_at,updated_by=excluded.updated_by').bind(id,String(draft.title||'Sans titre').slice(0,180),draft.kind==='sortie'?'sortie':'actualite',serialized,now,now,session.username).run();
+  return json({ok:true,id,updatedAt:now},200,request,env);
+ }
+ const draftMatch=url.pathname.match(/^\\/drafts\\/([a-f0-9-]{36})$/);
+ if(draftMatch&&['GET','DELETE'].includes(request.method)){
+  if(!hasPermission(session,'content.write'))return forbidden(request,env);
+  if(request.method==='DELETE'){await env.DB.prepare('DELETE FROM publication_drafts WHERE id=?').bind(draftMatch[1]).run();return json({ok:true},200,request,env)}
+  const row=await env.DB.prepare('SELECT id,payload,updated_at FROM publication_drafts WHERE id=?').bind(draftMatch[1]).first();
+  return row?json({ok:true,id:row.id,draft:JSON.parse(row.payload),updatedAt:row.updated_at},200,request,env):json({error:'Brouillon introuvable.'},404,request,env);
+ }
  if(url.pathname==='/content/index'&&request.method==='GET'){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
   const [articles,sorties]=await Promise.all([
