@@ -299,7 +299,7 @@ async function savePublicArticle(request,env){
  if(requested&&!/^A\d{7}[A-Z]{3}$/.test(requested))throw Object.assign(new Error('Identifiant d’actualité invalide.'),{status:400});
  if(requested&&!existingMeta)throw Object.assign(new Error('Actualité introuvable dans le dépôt.'),{status:404});
  const assigned=existingMeta?{id:existingMeta.id,number:Number(existingMeta.number)||Number((existingMeta.id.match(/^A(\d+)/)||[])[1])}:newArticleId(index);
- const id=assigned.id,seasonCode=existingMeta?.seasonCode||safeSeason(index),season=existingMeta?.season||index.seasonSystem?.currentSeason||'';
+ const chosenCode=String(input.season||'').toUpperCase();if(chosenCode&&!/^AA[A-Z]$/.test(chosenCode))throw Object.assign(new Error('Code de saison associative invalide.'),{status:400});const seasonCode=existingMeta?.seasonCode||chosenCode||safeSeason(index),id=existingMeta?.id||('A'+String(assigned.number).padStart(7,'0')+seasonCode),season=existingMeta?.season||(chosenCode?String(2025+chosenCode.charCodeAt(2)-65)+'-'+String(2026+chosenCode.charCodeAt(2)-65):index.seasonSystem?.currentSeason||'');
  const oldFile=existingMeta?await githubFile(env,env.CONTENT_REPO,existingMeta.path||('actualites/'+id+'/contenu.json')):null;
  const old=oldFile?JSON.parse(decodeBase64(oldFile.content)):{};
  const writes=[];const photoInputs=cleanUploads(input.photos||[]),photos=await persistPhotos(env,'actualites',id,photoInputs,writes);
