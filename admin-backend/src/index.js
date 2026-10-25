@@ -79,7 +79,7 @@ async function handle(request,env){
  const draftMatch=url.pathname.match(/^\/drafts\/([a-f0-9-]{36})$/);
  if(draftMatch&&['GET','DELETE'].includes(request.method)){
   if(!hasPermission(session,'content.write'))return forbidden(request,env);
-  if(request.method==='DELETE'){await env.DB.prepare('DELETE FROM publication_drafts WHERE id=?').bind(draftMatch[1]).run();return json({ok:true},200,request,env)}
+  if(request.method==='DELETE'){if(env.DRAFT_MEDIA){let cursor;do{const batch=await env.DRAFT_MEDIA.list({prefix:draftMatch[1]+'/',cursor});for(const object of batch.objects)await env.DRAFT_MEDIA.delete(object.key);cursor=batch.truncated?batch.cursor:null}while(cursor)}await env.DB.prepare('DELETE FROM publication_drafts WHERE id=?').bind(draftMatch[1]).run();return json({ok:true},200,request,env)}
   const row=await env.DB.prepare('SELECT id,payload,updated_at FROM publication_drafts WHERE id=?').bind(draftMatch[1]).first();
   return row?json({ok:true,id:row.id,draft:JSON.parse(row.payload),updatedAt:row.updated_at},200,request,env):json({error:'Brouillon introuvable.'},404,request,env);
  }
