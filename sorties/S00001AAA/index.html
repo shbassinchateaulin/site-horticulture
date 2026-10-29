@@ -33,15 +33,7 @@
 .program h2{margin-bottom:19px}.day{display:grid;grid-template-columns:120px 1fr;gap:20px;padding:17px 0;border-top:1px solid #d8ded4}.day:first-of-type{border-top:0}.day time{color:#41694a;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.day p{margin:0;color:#4f5c53;font-size:13px;line-height:1.75}
 .payment{padding:35px 38px;background:#eef2e8;display:grid;grid-template-columns:1fr 1.2fr auto;gap:28px;align-items:center;margin-bottom:58px}
 .payment h2{font-size:24px}.payment p{margin:7px 0 0;color:#59675d;font-size:12px;line-height:1.6}.payment-amount{color:#244d34;font-size:13px;line-height:1.7}.payment-amount strong{font:400 25px/1.2 var(--serif)}
-.angers-cta{display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:48px;padding:0 22px;background:#315f36;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;transition:background-color .25s ease,transform .25s ease,box-shadow .25s ease}.angers-cta:hover{background:#234c2d;transform:translateY(-2px);box-shadow:0 10px 22px rgba(25,73,42,.18)}
-/* Animations discrètes de la page Angers : aucun rideau ni transition entre les pages. */
-.angers-page .angers-hero>div,.angers-page .angers-cover{opacity:0;transform:translateY(18px)}
-.angers-page.is-ready .angers-hero>div,.angers-page.is-ready .angers-cover{opacity:1;transform:none;transition:opacity .7s ease,transform .7s cubic-bezier(.2,.75,.25,1)}
-.angers-page.is-ready .angers-cover{transition-delay:.12s}
-.angers-page .reveal{opacity:0;transform:translateY(22px)}
-.angers-page .reveal.is-visible{opacity:1;transform:none;transition:opacity .65s ease,transform .65s cubic-bezier(.2,.75,.25,1)}
-.angers-page .gallery-grid figure{transition:transform .3s ease,box-shadow .3s ease}.angers-page .gallery-grid figure:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(21,62,39,.14)}
-@media(prefers-reduced-motion:reduce){.angers-page .angers-hero>div,.angers-page .angers-cover,.angers-page .reveal{opacity:1;transform:none;transition:none!important}.angers-page .gallery-grid figure,.angers-page .gallery-grid img,.angers-cta{transition:none!important}}
+.angers-cta{display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:48px;padding:0 22px;background:#315f36;color:#fff;font-size:12px;font-weight:700;white-space:nowrap}.angers-cta:hover{background:#234c2d}
 @media(max-width:760px){.angers-wrap{width:calc(100% - 36px)}.angers-hero{padding:38px 0 30px;grid-template-columns:1fr;gap:24px}.angers-hero h1{font-size:42px}.angers-cover{min-height:250px;border-radius:4px 36px 4px 4px}.angers-intro,.program{grid-template-columns:1fr;gap:15px;padding:27px 0 34px}.angers-intro h2,.gallery-heading h2,.program h2{font-size:26px}.gallery{padding:38px 0 44px}.gallery-heading{display:block}.gallery-heading p{margin-top:7px}.gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:200px 150px 150px;gap:8px}.gallery-grid figure:first-child{grid-column:span 2;grid-row:auto}.gallery-grid img{min-height:0}.day{grid-template-columns:88px 1fr;gap:12px}.payment{padding:24px 20px;margin-bottom:38px;grid-template-columns:1fr;gap:14px}.angers-cta{width:100%}}
 </style>
 </head>
@@ -67,19 +59,5 @@
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../../">Accueil</a><a href="../../actualites/">Actualités</a><a href="../../a-venir/">À venir</a><a href="../">Sorties</a><a href="../../association/">L’association</a></div><div><h4>Informations</h4><a href="../../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../../assets/js/site.js?v=20261011-angers"></script>
-<script>
-(()=>{
-  const page=document.querySelector('.angers-page');
-  if(!page)return;
-  requestAnimationFrame(()=>page.classList.add('is-ready'));
-  const items=[...page.querySelectorAll('.angers-intro,.gallery,.program,.payment')];
-  items.forEach(item=>item.classList.add('reveal'));
-  if(!('IntersectionObserver' in window)){items.forEach(item=>item.classList.add('is-visible'));return}
-  const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
-    if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}
-  }),{threshold:.12,rootMargin:'0px 0px -35px'});
-  items.forEach(item=>observer.observe(item));
-})();
-</script>
 </body>
 </html>
