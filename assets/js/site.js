@@ -249,21 +249,3 @@ if(location.pathname.endsWith('/a-venir/')||location.pathname.endsWith('/a-venir
   finally{clearTimeout(deadline);submit.disabled=false;submit.textContent='Connexion'}
  });
 })();
-// Parcours animé entre les pages publiques : fondu, rideau vert et apparition progressive.
-(()=>{
- const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const header=document.querySelector('.site-header');
- const onScroll=()=>header?.classList.toggle('scrolled',window.scrollY>18);
- onScroll();window.addEventListener('scroll',onScroll,{passive:true});
- if(reduce)return;
- document.addEventListener('click',event=>{
-  const link=event.target.closest('a[href]');
-  if(!link||event.defaultPrevented||link.target==='_blank'||link.hasAttribute('download'))return;
-  const href=link.href;
-  if(!href||!href.startsWith(location.origin)||new URL(href).pathname===location.pathname&&new URL(href).search===location.search)return;
-  event.preventDefault();document.body.classList.add('shb-leaving');
-  window.setTimeout(()=>{location.href=href},390);
- },true);
- const hero=document.querySelector('.hero');
- if(hero){window.addEventListener('scroll',()=>{hero.style.backgroundPosition=`center calc(48% + ${Math.min(window.scrollY*.08,24)}px)`},{passive:true})}
-})();
