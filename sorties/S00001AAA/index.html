@@ -34,15 +34,6 @@
 .payment{padding:35px 38px;background:#eef2e8;display:grid;grid-template-columns:1fr 1.2fr auto;gap:28px;align-items:center;margin-bottom:58px}
 .payment h2{font-size:24px}.payment p{margin:7px 0 0;color:#59675d;font-size:12px;line-height:1.6}.payment-amount{color:#244d34;font-size:13px;line-height:1.7}.payment-amount strong{font:400 25px/1.2 var(--serif)}
 .angers-cta{display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:48px;padding:0 22px;background:#315f36;color:#fff;font-size:12px;font-weight:700;white-space:nowrap}.angers-cta:hover{background:#234c2d}
-/* Animations de présentation uniquement : le contenu et la navigation restent inchangés. */
-.angers-page.motion-on .angers-hero>div,.angers-page.motion-on .angers-cover{animation:angers-in .7s cubic-bezier(.2,.75,.25,1) both}.angers-page.motion-on .angers-cover{animation-delay:.12s}
-.angers-page.motion-on .angers-intro,.angers-page.motion-on .gallery,.angers-page.motion-on .program,.angers-page.motion-on .payment{opacity:0;transform:translateY(20px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.75,.25,1)}
-.angers-page.motion-on .is-visible{opacity:1;transform:none}
-.angers-page .gallery-grid figure{transition:transform .3s ease,box-shadow .3s ease}.angers-page .gallery-grid figure:hover{transform:translateY(-4px);box-shadow:0 12px 25px rgba(18,65,38,.14)}
-.angers-page .angers-cover img{transition:transform .8s ease}.angers-page .angers-cover:hover img{transform:scale(1.035)}
-.angers-page .angers-cta{transition:transform .22s ease,box-shadow .22s ease,background-color .22s ease}.angers-page .angers-cta:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(22,73,40,.18)}
-@keyframes angers-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.angers-page.motion-on .angers-hero>div,.angers-page.motion-on .angers-cover,.angers-page.motion-on .angers-intro,.angers-page.motion-on .gallery,.angers-page.motion-on .program,.angers-page.motion-on .payment{animation:none;opacity:1;transform:none;transition:none!important}.angers-page .gallery-grid figure,.angers-page .angers-cover img,.angers-page .angers-cta{transition:none!important}}
 @media(max-width:760px){.angers-wrap{width:calc(100% - 36px)}.angers-hero{padding:38px 0 30px;grid-template-columns:1fr;gap:24px}.angers-hero h1{font-size:42px}.angers-cover{min-height:250px;border-radius:4px 36px 4px 4px}.angers-intro,.program{grid-template-columns:1fr;gap:15px;padding:27px 0 34px}.angers-intro h2,.gallery-heading h2,.program h2{font-size:26px}.gallery{padding:38px 0 44px}.gallery-heading{display:block}.gallery-heading p{margin-top:7px}.gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:200px 150px 150px;gap:8px}.gallery-grid figure:first-child{grid-column:span 2;grid-row:auto}.gallery-grid img{min-height:0}.day{grid-template-columns:88px 1fr;gap:12px}.payment{padding:24px 20px;margin-bottom:38px;grid-template-columns:1fr;gap:14px}.angers-cta{width:100%}}
 </style>
 </head>
@@ -68,8 +59,5 @@
 </main>
 <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../../">Accueil</a><a href="../../actualites/">Actualités</a><a href="../../a-venir/">À venir</a><a href="../">Sorties</a><a href="../../association/">L’association</a></div><div><h4>Informations</h4><a href="../../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 <script src="../../assets/js/site.js?v=20261011-angers"></script>
-<script>
-(()=>{const page=document.querySelector('.angers-page');if(!page||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;page.classList.add('motion-on');const sections=page.querySelectorAll('.angers-intro,.gallery,.program,.payment');if(!('IntersectionObserver' in window)){sections.forEach(x=>x.classList.add('is-visible'));return}const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-visible');io.unobserve(e.target)}}),{threshold:.14,rootMargin:'0px 0px -30px'});sections.forEach(x=>io.observe(x))})();
-</script>
 </body>
 </html>
