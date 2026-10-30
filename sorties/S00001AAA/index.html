@@ -126,44 +126,7 @@
     <canvas id="petalsCanvas" class="fixed inset-0 pointer-events-none z-30 opacity-70"></canvas>
 
     <!-- BARRE DE NAVIGATION -->
-    <header class="sticky top-0 z-40 bg-brand-dark/90 backdrop-blur-md text-brand-sand border-b border-brand-primary/40 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Logo & Identification -->
-            <a href="#" class="flex items-center gap-3 group">
-                <div class="w-12 h-12 rounded-full bg-white/95 border border-brand-accent/50 flex items-center justify-center overflow-hidden group-hover:rotate-3 transition-transform duration-300">
-                    <img src="https://raw.githubusercontent.com/shbassinchateaulin/site-horticulture/main/assets/images/logo.png" alt="Logo de la Société d’Horticulture" class="w-full h-full object-contain p-1">
-                </div>
-                <div>
-                    <span class="block text-xs uppercase tracking-widest text-brand-gold font-semibold">Société d'Horticulture</span>
-                    <span class="font-serif font-bold text-lg tracking-wide text-white group-hover:text-brand-gold transition-colors">Bassin de Châteaulin</span>
-                </div>
-            </a>
-
-            <!-- Menu Liens -->
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
-                <a href="#hero" class="hover:text-brand-gold transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-house text-xs opacity-70"></i> Accueil
-                </a>
-                <a href="#ticket-view" class="text-brand-gold flex items-center gap-2 font-semibold">
-                    <i class="fa-solid fa-ticket text-xs"></i> Sortie active (S00001AAA)
-                </a>
-                <a href="#itineraire" class="hover:text-brand-gold transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-route text-xs opacity-70"></i> Itinéraire & Escales
-                </a>
-                <a href="#prochaines-sorties" class="hover:text-brand-gold transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-map-location-dot text-xs opacity-70"></i> Carnet de Voyages
-                </a>
-            </nav>
-
-            <!-- Bouton CTA -->
-            <div class="flex items-center gap-3">
-                <a href="#reserver" class="px-5 py-2.5 rounded-full bg-brand-accent text-white text-sm font-semibold hover:bg-brand-accent/90 transition-all shadow-md hover:shadow-glow flex items-center gap-2 transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-paper-plane text-xs"></i>
-                    <span>S’inscrire</span>
-                </a>
-            </div>
-        </div>
-    </header>
+    <header class="site-header"><a class="brand" href="../../"><img class="brand-logo" src="../../assets/images/logo.png" alt="Logo de la Société d’Horticulture"><div class="brand-name">Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</div></a><nav class="main-nav"><a href="../../">Accueil</a><a href="../../actualites/">Actualités</a><a href="../../a-venir/">À venir</a><a class="active" aria-current="page" href="../">Sorties</a><a href="../../association/">L’association</a><a href="../../contact/">Contact</a><a href="../../suggestions/">Suggestions</a></nav><div class="header-right"><span class="search-icon"></span><a class="join" href="../../adhesion/">Adhérer <b>→</b></a></div><button class="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button></header>
 
     <!-- SECTION HERO - EMBARQUEMENT & EVASION -->
     <section id="hero" class="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-brand-dark text-white py-16">
@@ -649,54 +612,7 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-brand-dark text-white pt-16 pb-8 border-t border-white/10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-            
-            <div class="space-y-4">
-                <div class="flex items-center gap-2 text-brand-gold font-serif font-bold text-lg">
-                    <i class="fa-solid fa-leaf"></i> SH Châteaulin
-                </div>
-                <p class="text-xs text-gray-400 leading-relaxed">
-                    Société d'Horticulture et d'Art Floral du Bassin de Châteaulin. Association régie par la loi 1901 dédiée à la passion des plantes, du jardinage et du patrimoine.
-                </p>
-            </div>
-
-            <div>
-                <h4 class="font-serif font-bold text-brand-gold text-sm mb-4">Naviguer</h4>
-                <ul class="space-y-2 text-xs text-gray-300">
-                    <li><a href="#hero" class="hover:text-white transition-colors">Accueil</a></li>
-                    <li><a href="#ticket-view" class="hover:text-white transition-colors">Sortie en cours (S00001AAA)</a></li>
-                    <li><a href="#itineraire" class="hover:text-white transition-colors">Itinéraire interactif</a></li>
-                    <li><a href="#prochaines-sorties" class="hover:text-white transition-colors">Prochaines escales</a></li>
-                </ul>
-            </div>
-
-            <div>
-                <h4 class="font-serif font-bold text-brand-gold text-sm mb-4">Contact & Inscriptions</h4>
-                <p class="text-xs text-gray-300 leading-relaxed mb-2">
-                    <i class="fa-solid fa-location-dot text-brand-accent mr-1"></i> Maison des Associations, 29150 Châteaulin
-                </p>
-                <p class="text-xs text-gray-300 leading-relaxed">
-                    <i class="fa-solid fa-envelope text-brand-accent mr-1"></i> contact@sh-chateaulin.fr
-                </p>
-            </div>
-
-            <div>
-                <h4 class="font-serif font-bold text-brand-gold text-sm mb-4">Inspirations Nature</h4>
-                <p class="text-xs text-gray-400 mb-3">Recevez les convocations et carnets de voyage par courriel :</p>
-                <form onsubmit="event.preventDefault(); showToast('Inscription enregistrée !');" class="flex gap-2">
-                    <input type="email" placeholder="Votre email..." required class="px-3 py-2 rounded-lg bg-white/10 text-white text-xs border border-white/20 focus:outline-none focus:border-brand-gold flex-grow">
-                    <button type="submit" class="px-3 py-2 bg-brand-accent text-white rounded-lg text-xs font-bold hover:bg-brand-accent/80 transition-colors">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-white/5 text-center text-xs text-gray-500">
-            &copy; 2026 Société d'Horticulture du Bassin de Châteaulin &bull; Conception Carnet de Voyage
-        </div>
-    </footer>
+    <footer><div class="footer-grid"><div class="footer-brand"><img class="footer-logo" src="../../assets/images/logo.png" alt=""><h3>Société d’Horticulture<br>et d’Art Floral<br>du Bassin de Châteaulin</h3><p>Cultiver aujourd’hui les jardins de demain</p></div><div><h4>Navigation</h4><a href="../../">Accueil</a><a href="../../actualites/">Actualités</a><a href="../../a-venir/">À venir</a><a href="../">Sorties</a><a href="../../association/">L’association</a></div><div><h4>Informations</h4><a href="../../adhesion/">Adhésion</a></div><div><h4>Contact</h4><a href="../../contact/">Contact</a></div><div class="social"></div></div><div class="legal">© 2026 Société d’Horticulture et d’Art Floral du Bassin de Châteaulin</div></footer>
 
     <!-- MODAL DE RESERVATION / DEMANDE D'INFORMATION -->
     <div id="bookingModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
